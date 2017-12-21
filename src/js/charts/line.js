@@ -142,6 +142,28 @@
         // this_path.classed('mg-line' + (line_id) + '-color', true);
         mg_default_color_for_path(this_path, line_id);
       }
+    } else if (args.custom_style.lines) {
+
+        if (args.custom_style.lines.constructor === Array) {
+
+            var style = args.custom_style.lines[which_line];
+
+            if(style) { // Style config exist for the line
+                var attributes = Object.keys(style);
+                attributes.forEach(function (attrProperty) {
+                    this_path.attr(attrProperty, style[attrProperty]);
+                });
+
+            } else {
+                // Go with default coloring.
+                mg_default_color_for_path(this_path, line_id);
+            }
+
+        } else {
+            // Go with default coloring.
+            mg_default_color_for_path(this_path, line_id);
+        }
+
     } else {
       // this is the typical workflow
       // this_path.classed('mg-line' + (line_id) + '-color', true);
