@@ -784,6 +784,10 @@ MG.data_graphic = function(args) {
     interpolate: d3.curveCatmullRom.alpha(0),   // interpolation method to use when rendering lines; increase tension if your data is irregular and you notice artifacts
     custom_line_color_map: [],                  // allows arbitrary mapping of lines to colors, e.g. [2,3] will map line 1 to color 2 and line 2 to color 3
     colors: null,                               // UNIMPLEMENTED - allows direct color mapping to line colors. Will eventually require
+    custom_style: {                             // Allows custom style mapping for lines
+        lines: [],                               // Example. lines: [{"stroke": "darkgreen", "stroke-dasharray": "10, 10"}, {"stroke": "blue", "stroke-dasharray": "2, 2"}, {"stroke": "red"}]
+        circleColors: []
+    },
     max_data_size: null,                        // explicitly specify the the max number of line series, for use with custom_line_color_map
     aggregate_rollover: false,                  // links the lines in a multi-line chart
     show_tooltips: true,                        // if enabled, a chart's description will appear in a tooltip (requires jquery)
@@ -4678,6 +4682,28 @@ MG.button_layout = function(target) {
         // this_path.classed('mg-line' + (line_id) + '-color', true);
         mg_default_color_for_path(this_path, line_id);
       }
+    } else if (args.custom_style.lines) {
+
+        if (args.custom_style.lines.constructor === Array) {
+
+            var style = args.custom_style.lines[which_line];
+
+            if(style) { // Style config exist for the line
+                var attributes = Object.keys(style);
+                attributes.forEach(function (attrProperty) {
+                    this_path.attr(attrProperty, style[attrProperty]);
+                });
+
+            } else {
+                // Go with default coloring.
+                mg_default_color_for_path(this_path, line_id);
+            }
+
+        } else {
+            // Go with default coloring.
+            mg_default_color_for_path(this_path, line_id);
+        }
+
     } else {
       // this is the typical workflow
       // this_path.classed('mg-line' + (line_id) + '-color', true);
@@ -4806,6 +4832,7 @@ MG.button_layout = function(target) {
       .attr('r', 0);
 
     if (args.colors && args.colors.constructor === Array) {
+
       circle
         .attr('class', function(d) {
           return 'mg-line' + d.line_id;
@@ -4816,6 +4843,25 @@ MG.button_layout = function(target) {
         .attr('stroke', function(d, i) {
           return args.colors[i];
         });
+
+    } else if (args.custom_style.circleColors && args.custom_style.circleColors.length) {
+
+        if (args.custom_style.circleColors.constructor === Array) {
+
+            var circleColors = args.custom_style.circleColors;
+
+            circle
+                .attr('class', function(d) {
+                    return 'mg-line' + d.line_id;
+                })
+                .attr('fill', function(d, i) {
+                    return circleColors[i];
+                })
+                .attr('stroke', function(d, i) {
+                    return circleColors[i];
+                });
+        }
+
     } else {
       circle.attr('class', function(d, i) {
         return [
