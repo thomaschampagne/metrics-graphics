@@ -111,7 +111,8 @@ MG.data_graphic = function(args) {
     custom_line_color_map: [],                  // allows arbitrary mapping of lines to colors, e.g. [2,3] will map line 1 to color 2 and line 2 to color 3
     colors: null,                               // UNIMPLEMENTED - allows direct color mapping to line colors. Will eventually require
     custom_style: {                             // Allows custom style mapping for lines
-        lines: []                               // Example. lines: [{"stroke": "darkgreen", "stroke-dasharray": "10, 10"}, {"stroke": "blue", "stroke-dasharray": "2, 2"}, {"stroke": "red"}]
+        lines: [],                               // Example. lines: [{"stroke": "darkgreen", "stroke-dasharray": "10, 10"}, {"stroke": "blue", "stroke-dasharray": "2, 2"}, {"stroke": "red"}]
+        circleColors: []
     },
     max_data_size: null,                        // explicitly specify the the max number of line series, for use with custom_line_color_map
     aggregate_rollover: false,                  // links the lines in a multi-line chart

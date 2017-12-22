@@ -292,6 +292,7 @@
       .attr('r', 0);
 
     if (args.colors && args.colors.constructor === Array) {
+
       circle
         .attr('class', function(d) {
           return 'mg-line' + d.line_id;
@@ -302,6 +303,25 @@
         .attr('stroke', function(d, i) {
           return args.colors[i];
         });
+
+    } else if (args.custom_style.circleColors && args.custom_style.circleColors.length) {
+
+        if (args.custom_style.circleColors.constructor === Array) {
+
+            var circleColors = args.custom_style.circleColors;
+
+            circle
+                .attr('class', function(d) {
+                    return 'mg-line' + d.line_id;
+                })
+                .attr('fill', function(d, i) {
+                    return circleColors[i];
+                })
+                .attr('stroke', function(d, i) {
+                    return circleColors[i];
+                });
+        }
+
     } else {
       circle.attr('class', function(d, i) {
         return [
