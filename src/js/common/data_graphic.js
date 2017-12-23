@@ -113,7 +113,6 @@ MG.data_graphic = function(args) {
     custom_style: {                             // Allows custom style mapping for lines
         lines: [],                              // Example. lines: [{"stroke": "darkgreen", "stroke-dasharray": "10, 10"}, {"stroke": "blue", "stroke-dasharray": "2, 2"}, {"stroke": "red"}]
         circle_colors: [],
-        markers: []
     },
     max_data_size: null,                        // explicitly specify the the max number of line series, for use with custom_line_color_map
     aggregate_rollover: false,                  // links the lines in a multi-line chart
