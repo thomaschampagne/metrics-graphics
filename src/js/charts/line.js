@@ -304,11 +304,11 @@
           return args.colors[i];
         });
 
-    } else if (args.custom_style.circleColors && args.custom_style.circleColors.length) {
+    } else if (args.custom_style.circle_colors && args.custom_style.circle_colors.length) {
 
-        if (args.custom_style.circleColors.constructor === Array) {
+        if (args.custom_style.circle_colors.constructor === Array) {
 
-            var circleColors = args.custom_style.circleColors;
+            var circleColors = args.custom_style.circle_colors;
 
             circle
                 .attr('class', function(d) {
