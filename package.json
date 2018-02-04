@@ -1,6 +1,6 @@
 {
-  "name": "metrics-graphics",
-  "version": "2.12.0",
+  "name": "metrics-graphics-fastring",
+  "version": "1.0.2",
   "description": "A library optimized for concise, principled data graphics and layouts",
   "main": "dist/metricsgraphics.js",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/mozilla/metrics-graphics.git"
+    "url": "git://github.com/thomaschampagne/metrics-graphics-fastring.git"
   },
   "keywords": [
     "metrics-graphics",
@@ -26,7 +26,7 @@
   ],
   "license": "MPL-2.0",
   "bugs": {
-    "url": "https://github.com/mozilla/metrics-graphics/issues"
+    "url": "https://github.com/thomaschampagne/metrics-graphics-fastring/issues"
   },
   "engines": {
     "node": ">=0.8.0"

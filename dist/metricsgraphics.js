@@ -22,7 +22,7 @@ MG.convert.date = function(data, accessor, time_format) {
   });
 
   return data;
-}
+};
 
 MG.convert.number = function(data, accessor) {
   data = data.map(function(d) {
@@ -31,11 +31,11 @@ MG.convert.number = function(data, accessor) {
   });
 
   return data;
-}
+};
 
 MG.time_format = function(utc, specifier) {
   return utc ? d3.utcFormat(specifier) : d3.timeFormat(specifier);
-}
+};
 
 function mg_jquery_exists() {
   if (typeof jQuery !== 'undefined' || typeof $ !== 'undefined') {
@@ -858,20 +858,20 @@ if (mg_jquery_exists()) {
       // ===============================
 
       var Tooltip = function (element, options) {
-        this.type       = null
-        this.options    = null
-        this.enabled    = null
-        this.timeout    = null
-        this.hoverState = null
-        this.$element   = null
-        this.inState    = null
+          this.type = null;
+          this.options = null;
+          this.enabled = null;
+          this.timeout = null;
+          this.hoverState = null;
+          this.$element = null;
+          this.inState = null;
 
         this.init('tooltip', element, options)
-      }
+      };
 
-      Tooltip.VERSION  = '3.3.5'
+        Tooltip.VERSION = '3.3.5';
 
-      Tooltip.TRANSITION_DURATION = 150
+        Tooltip.TRANSITION_DURATION = 150;
 
       Tooltip.DEFAULTS = {
         animation: true,
@@ -887,32 +887,32 @@ if (mg_jquery_exists()) {
           selector: 'body',
           padding: 0
         }
-      }
+      };
 
       Tooltip.prototype.init = function (type, element, options) {
-        this.enabled   = true
-        this.type      = type
-        this.$element  = $(element)
-        this.options   = this.getOptions(options)
-        this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
-        this.inState   = { click: false, hover: false, focus: false }
+          this.enabled = true;
+          this.type = type;
+          this.$element = $(element);
+          this.options = this.getOptions(options);
+          this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport));
+          this.inState = {click: false, hover: false, focus: false};
 
         if (this.$element[0] instanceof document.constructor && !this.options.selector) {
           throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
         }
 
-        var triggers = this.options.trigger.split(' ')
+          var triggers = this.options.trigger.split(' ');
 
         for (var i = triggers.length; i--;) {
-          var trigger = triggers[i]
+            var trigger = triggers[i];
 
           if (trigger == 'click') {
             this.$element.on('click.' + this.type, this.options.selector, $.proxy(this.toggle, this))
           } else if (trigger != 'manual') {
-            var eventIn  = trigger == 'hover' ? 'mouseenter' : 'focusin'
-            var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout'
+              var eventIn = trigger == 'hover' ? 'mouseenter' : 'focusin';
+              var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout';
 
-            this.$element.on(eventIn  + '.' + this.type, this.options.selector, $.proxy(this.enter, this))
+              this.$element.on(eventIn + '.' + this.type, this.options.selector, $.proxy(this.enter, this));
             this.$element.on(eventOut + '.' + this.type, this.options.selector, $.proxy(this.leave, this))
           }
         }
@@ -920,14 +920,14 @@ if (mg_jquery_exists()) {
         this.options.selector ?
           (this._options = $.extend({}, this.options, { trigger: 'manual', selector: '' })) :
           this.fixTitle()
-      }
+      };
 
       Tooltip.prototype.getDefaults = function () {
         return Tooltip.DEFAULTS
-      }
+      };
 
       Tooltip.prototype.getOptions = function (options) {
-        options = $.extend({}, this.getDefaults(), this.$element.data(), options)
+          options = $.extend({}, this.getDefaults(), this.$element.data(), options);
 
         if (options.delay && typeof options.delay == 'number') {
           options.delay = {
@@ -937,25 +937,25 @@ if (mg_jquery_exists()) {
         }
 
         return options
-      }
+      };
 
       Tooltip.prototype.getDelegateOptions = function () {
-        var options  = {}
-        var defaults = this.getDefaults()
+          var options = {};
+          var defaults = this.getDefaults();
 
         this._options && $.each(this._options, function (key, value) {
           if (defaults[key] != value) options[key] = value
-        })
+        });
 
         return options
-      }
+      };
 
       Tooltip.prototype.enter = function (obj) {
         var self = obj instanceof this.constructor ?
-          obj : $(obj.currentTarget).data('bs.' + this.type)
+            obj : $(obj.currentTarget).data('bs.' + this.type);
 
         if (!self) {
-          self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
+            self = new this.constructor(obj.currentTarget, this.getDelegateOptions());
           $(obj.currentTarget).data('bs.' + this.type, self)
         }
 
@@ -964,20 +964,20 @@ if (mg_jquery_exists()) {
         }
 
         if (self.tip().hasClass('in') || self.hoverState == 'in') {
-          self.hoverState = 'in'
+            self.hoverState = 'in';
           return
         }
 
-        clearTimeout(self.timeout)
+          clearTimeout(self.timeout);
 
-        self.hoverState = 'in'
+          self.hoverState = 'in';
 
-        if (!self.options.delay || !self.options.delay.show) return self.show()
+          if (!self.options.delay || !self.options.delay.show) return self.show();
 
         self.timeout = setTimeout(function () {
           if (self.hoverState == 'in') self.show()
         }, self.options.delay.show)
-      }
+      };
 
       Tooltip.prototype.isInStateTrue = function () {
         for (var key in this.inState) {
@@ -985,14 +985,14 @@ if (mg_jquery_exists()) {
         }
 
         return false
-      }
+      };
 
       Tooltip.prototype.leave = function (obj) {
         var self = obj instanceof this.constructor ?
-          obj : $(obj.currentTarget).data('bs.' + this.type)
+            obj : $(obj.currentTarget).data('bs.' + this.type);
 
         if (!self) {
-          self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
+            self = new this.constructor(obj.currentTarget, this.getDelegateOptions());
           $(obj.currentTarget).data('bs.' + this.type, self)
         }
 
@@ -1000,86 +1000,86 @@ if (mg_jquery_exists()) {
           self.inState[obj.type == 'focusout' ? 'focus' : 'hover'] = false
         }
 
-        if (self.isInStateTrue()) return
+          if (self.isInStateTrue()) return;
 
-        clearTimeout(self.timeout)
+          clearTimeout(self.timeout);
 
-        self.hoverState = 'out'
+          self.hoverState = 'out';
 
-        if (!self.options.delay || !self.options.delay.hide) return self.hide()
+          if (!self.options.delay || !self.options.delay.hide) return self.hide();
 
         self.timeout = setTimeout(function () {
           if (self.hoverState == 'out') self.hide()
         }, self.options.delay.hide)
-      }
+      };
 
       Tooltip.prototype.show = function () {
-        var e = $.Event('show.bs.' + this.type)
+          var e = $.Event('show.bs.' + this.type);
 
         if (this.hasContent() && this.enabled) {
-          this.$element.trigger(e)
+            this.$element.trigger(e);
 
-          var inDom = $.contains(this.$element[0].ownerDocument.documentElement, this.$element[0])
-          if (e.isDefaultPrevented() || !inDom) return
-          var that = this
+            var inDom = $.contains(this.$element[0].ownerDocument.documentElement, this.$element[0]);
+            if (e.isDefaultPrevented() || !inDom) return;
+            var that = this;
 
-          var $tip = this.tip()
+            var $tip = this.tip();
 
-          var tipId = this.getUID(this.type)
+            var tipId = this.getUID(this.type);
 
-          this.setContent()
-          $tip.attr('id', tipId)
-          this.$element.attr('aria-describedby', tipId)
+            this.setContent();
+            $tip.attr('id', tipId);
+            this.$element.attr('aria-describedby', tipId);
 
-          if (this.options.animation) $tip.addClass('fade')
+            if (this.options.animation) $tip.addClass('fade');
 
           var placement = typeof this.options.placement == 'function' ?
             this.options.placement.call(this, $tip[0], this.$element[0]) :
-            this.options.placement
+              this.options.placement;
 
-          var autoToken = /\s?auto?\s?/i
-          var autoPlace = autoToken.test(placement)
-          if (autoPlace) placement = placement.replace(autoToken, '') || 'top'
+            var autoToken = /\s?auto?\s?/i;
+            var autoPlace = autoToken.test(placement);
+            if (autoPlace) placement = placement.replace(autoToken, '') || 'top';
 
           $tip
             .detach()
             .css({ top: 0, left: 0, display: 'block' })
             .addClass(placement)
-            .data('bs.' + this.type, this)
+              .data('bs.' + this.type, this);
 
-          this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
-          this.$element.trigger('inserted.bs.' + this.type)
+            this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element);
+            this.$element.trigger('inserted.bs.' + this.type);
 
-          var pos          = this.getPosition()
-          var actualWidth  = $tip[0].offsetWidth
-          var actualHeight = $tip[0].offsetHeight
+            var pos = this.getPosition();
+            var actualWidth = $tip[0].offsetWidth;
+            var actualHeight = $tip[0].offsetHeight;
 
           if (autoPlace) {
-            var orgPlacement = placement
-            var viewportDim = this.getPosition(this.$viewport)
+              var orgPlacement = placement;
+              var viewportDim = this.getPosition(this.$viewport);
 
             placement = placement == 'bottom' && pos.bottom + actualHeight > viewportDim.bottom ? 'top'    :
                         placement == 'top'    && pos.top    - actualHeight < viewportDim.top    ? 'bottom' :
                         placement == 'right'  && pos.right  + actualWidth  > viewportDim.width  ? 'left'   :
                         placement == 'left'   && pos.left   - actualWidth  < viewportDim.left   ? 'right'  :
-                        placement
+                            placement;
 
             $tip
               .removeClass(orgPlacement)
               .addClass(placement)
           }
 
-          var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight)
+            var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight);
 
-          this.applyPlacement(calculatedOffset, placement)
+            this.applyPlacement(calculatedOffset, placement);
 
           var complete = function () {
-            var prevHoverState = that.hoverState
-            that.$element.trigger('shown.bs.' + that.type)
-            that.hoverState = null
+              var prevHoverState = that.hoverState;
+              that.$element.trigger('shown.bs.' + that.type);
+              that.hoverState = null;
 
             if (prevHoverState == 'out') that.leave(that)
-          }
+          };
 
           $.support.transition && this.$tip.hasClass('fade') ?
             $tip
@@ -1087,23 +1087,23 @@ if (mg_jquery_exists()) {
               .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
             complete()
         }
-      }
+      };
 
       Tooltip.prototype.applyPlacement = function (offset, placement) {
-        var $tip   = this.tip()
-        var width  = $tip[0].offsetWidth
-        var height = $tip[0].offsetHeight
+          var $tip = this.tip();
+          var width = $tip[0].offsetWidth;
+          var height = $tip[0].offsetHeight;
 
         // manually read margins because getBoundingClientRect includes difference
-        var marginTop = parseInt($tip.css('margin-top'), 10)
-        var marginLeft = parseInt($tip.css('margin-left'), 10)
+          var marginTop = parseInt($tip.css('margin-top'), 10);
+          var marginLeft = parseInt($tip.css('margin-left'), 10);
 
         // we must check for NaN for ie 8/9
-        if (isNaN(marginTop))  marginTop  = 0
-        if (isNaN(marginLeft)) marginLeft = 0
+          if (isNaN(marginTop)) marginTop = 0;
+          if (isNaN(marginLeft)) marginLeft = 0;
 
-        offset.top  += marginTop
-        offset.left += marginLeft
+          offset.top += marginTop;
+          offset.left += marginLeft;
 
         // $.fn.offset doesn't round pixel values
         // so we use setOffset directly with our own function B-0
@@ -1114,103 +1114,103 @@ if (mg_jquery_exists()) {
               left: Math.round(props.left)
             })
           }
-        }, offset), 0)
+        }, offset), 0);
 
-        $tip.addClass('in')
+          $tip.addClass('in');
 
         // check to see if placing tip in new offset caused the tip to resize itself
-        var actualWidth  = $tip[0].offsetWidth
-        var actualHeight = $tip[0].offsetHeight
+          var actualWidth = $tip[0].offsetWidth;
+          var actualHeight = $tip[0].offsetHeight;
 
         if (placement == 'top' && actualHeight != height) {
           offset.top = offset.top + height - actualHeight
         }
 
-        var delta = this.getViewportAdjustedDelta(placement, offset, actualWidth, actualHeight)
+          var delta = this.getViewportAdjustedDelta(placement, offset, actualWidth, actualHeight);
 
-        if (delta.left) offset.left += delta.left
-        else offset.top += delta.top
+          if (delta.left) offset.left += delta.left;
+          else offset.top += delta.top;
 
-        var isVertical          = /top|bottom/.test(placement)
-        var arrowDelta          = isVertical ? delta.left * 2 - width + actualWidth : delta.top * 2 - height + actualHeight
-        var arrowOffsetPosition = isVertical ? 'offsetWidth' : 'offsetHeight'
+          var isVertical = /top|bottom/.test(placement);
+          var arrowDelta = isVertical ? delta.left * 2 - width + actualWidth : delta.top * 2 - height + actualHeight;
+          var arrowOffsetPosition = isVertical ? 'offsetWidth' : 'offsetHeight';
 
-        $tip.offset(offset)
+          $tip.offset(offset);
         this.replaceArrow(arrowDelta, $tip[0][arrowOffsetPosition], isVertical)
-      }
+      };
 
       Tooltip.prototype.replaceArrow = function (delta, dimension, isVertical) {
         this.arrow()
           .css(isVertical ? 'left' : 'top', 50 * (1 - delta / dimension) + '%')
           .css(isVertical ? 'top' : 'left', '')
-      }
+      };
 
       Tooltip.prototype.setContent = function () {
-        var $tip  = this.tip()
-        var title = this.getTitle()
+          var $tip = this.tip();
+          var title = this.getTitle();
 
-        $tip.find('.tooltip-inner')[this.options.html ? 'html' : 'text'](title)
+          $tip.find('.tooltip-inner')[this.options.html ? 'html' : 'text'](title);
         $tip.removeClass('fade in top bottom left right')
-      }
+      };
 
       Tooltip.prototype.hide = function (callback) {
-        var that = this
-        var $tip = $(this.$tip)
-        var e    = $.Event('hide.bs.' + this.type)
+          var that = this;
+          var $tip = $(this.$tip);
+          var e = $.Event('hide.bs.' + this.type);
 
         function complete() {
-          if (that.hoverState != 'in') $tip.detach()
+            if (that.hoverState != 'in') $tip.detach();
           that.$element
             .removeAttr('aria-describedby')
-            .trigger('hidden.bs.' + that.type)
+              .trigger('hidden.bs.' + that.type);
           callback && callback()
         }
 
-        this.$element.trigger(e)
+          this.$element.trigger(e);
 
-        if (e.isDefaultPrevented()) return
+          if (e.isDefaultPrevented()) return;
 
-        $tip.removeClass('in')
+          $tip.removeClass('in');
 
         $.support.transition && $tip.hasClass('fade') ?
           $tip
             .one('bsTransitionEnd', complete)
             .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
-          complete()
+            complete();
 
-        this.hoverState = null
+          this.hoverState = null;
 
         return this
-      }
+      };
 
       Tooltip.prototype.fixTitle = function () {
-        var $e = this.$element
+          var $e = this.$element;
         if ($e.attr('title') || typeof $e.attr('data-original-title') != 'string') {
           $e.attr('data-original-title', $e.attr('title') || '').attr('title', '')
         }
-      }
+      };
 
       Tooltip.prototype.hasContent = function () {
         return this.getTitle()
-      }
+      };
 
       Tooltip.prototype.getPosition = function ($element) {
-        $element   = $element || this.$element
+          $element = $element || this.$element;
 
-        var el     = $element[0]
-        var isBody = el.tagName == 'BODY'
+          var el = $element[0];
+          var isBody = el.tagName == 'BODY';
 
-        var elRect    = el.getBoundingClientRect()
+          var elRect = el.getBoundingClientRect();
         if (elRect.width == null) {
           // width and height are missing in IE8, so compute them manually; see https://github.com/twbs/bootstrap/issues/14093
           elRect = $.extend({}, elRect, { width: elRect.right - elRect.left, height: elRect.bottom - elRect.top })
         }
-        var elOffset  = isBody ? { top: 0, left: 0 } : $element.offset()
-        var scroll    = { scroll: isBody ? document.documentElement.scrollTop || document.body.scrollTop : $element.scrollTop() }
-        var outerDims = isBody ? { width: $(window).width(), height: $(window).height() } : null
+          var elOffset = isBody ? {top: 0, left: 0} : $element.offset();
+          var scroll = {scroll: isBody ? document.documentElement.scrollTop || document.body.scrollTop : $element.scrollTop()};
+          var outerDims = isBody ? {width: $(window).width(), height: $(window).height()} : null;
 
         return $.extend({}, elRect, scroll, outerDims, elOffset)
-      }
+      };
 
       Tooltip.prototype.getCalculatedOffset = function (placement, pos, actualWidth, actualHeight) {
         return placement == 'bottom' ? { top: pos.top + pos.height,   left: pos.left + pos.width / 2 - actualWidth / 2 } :
@@ -1218,26 +1218,26 @@ if (mg_jquery_exists()) {
                placement == 'left'   ? { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth } :
             /* placement == 'right' */ { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width }
 
-      }
+      };
 
       Tooltip.prototype.getViewportAdjustedDelta = function (placement, pos, actualWidth, actualHeight) {
-        var delta = { top: 0, left: 0 }
-        if (!this.$viewport) return delta
+          var delta = {top: 0, left: 0};
+          if (!this.$viewport) return delta;
 
-        var viewportPadding = this.options.viewport && this.options.viewport.padding || 0
-        var viewportDimensions = this.getPosition(this.$viewport)
+          var viewportPadding = this.options.viewport && this.options.viewport.padding || 0;
+          var viewportDimensions = this.getPosition(this.$viewport);
 
         if (/right|left/.test(placement)) {
-          var topEdgeOffset    = pos.top - viewportPadding - viewportDimensions.scroll
-          var bottomEdgeOffset = pos.top + viewportPadding - viewportDimensions.scroll + actualHeight
+            var topEdgeOffset = pos.top - viewportPadding - viewportDimensions.scroll;
+            var bottomEdgeOffset = pos.top + viewportPadding - viewportDimensions.scroll + actualHeight;
           if (topEdgeOffset < viewportDimensions.top) { // top overflow
             delta.top = viewportDimensions.top - topEdgeOffset
           } else if (bottomEdgeOffset > viewportDimensions.top + viewportDimensions.height) { // bottom overflow
             delta.top = viewportDimensions.top + viewportDimensions.height - bottomEdgeOffset
           }
         } else {
-          var leftEdgeOffset  = pos.left - viewportPadding
-          var rightEdgeOffset = pos.left + viewportPadding + actualWidth
+            var leftEdgeOffset = pos.left - viewportPadding;
+            var rightEdgeOffset = pos.left + viewportPadding + actualWidth;
           if (leftEdgeOffset < viewportDimensions.left) { // left overflow
             delta.left = viewportDimensions.left - leftEdgeOffset
           } else if (rightEdgeOffset > viewportDimensions.right) { // right overflow
@@ -1246,83 +1246,83 @@ if (mg_jquery_exists()) {
         }
 
         return delta
-      }
+      };
 
       Tooltip.prototype.getTitle = function () {
-        var title
-        var $e = this.$element
-        var o  = this.options
+          var title;
+          var $e = this.$element;
+          var o = this.options;
 
         title = $e.attr('data-original-title')
-          || (typeof o.title == 'function' ? o.title.call($e[0]) :  o.title)
+            || (typeof o.title == 'function' ? o.title.call($e[0]) : o.title);
 
         return title
-      }
+      };
 
       Tooltip.prototype.getUID = function (prefix) {
-        do prefix += ~~(Math.random() * 1000000)
-        while (document.getElementById(prefix))
+          do prefix += ~~(Math.random() * 1000000);
+          while (document.getElementById(prefix));
         return prefix
-      }
+      };
 
       Tooltip.prototype.tip = function () {
         if (!this.$tip) {
-          this.$tip = $(this.options.template)
+            this.$tip = $(this.options.template);
           if (this.$tip.length != 1) {
             throw new Error(this.type + ' `template` option must consist of exactly 1 top-level element!')
           }
         }
         return this.$tip
-      }
+      };
 
       Tooltip.prototype.arrow = function () {
         return (this.$arrow = this.$arrow || this.tip().find('.tooltip-arrow'))
-      }
+      };
 
       Tooltip.prototype.enable = function () {
         this.enabled = true
-      }
+      };
 
       Tooltip.prototype.disable = function () {
         this.enabled = false
-      }
+      };
 
       Tooltip.prototype.toggleEnabled = function () {
         this.enabled = !this.enabled
-      }
+      };
 
       Tooltip.prototype.toggle = function (e) {
-        var self = this
+          var self = this;
         if (e) {
-          self = $(e.currentTarget).data('bs.' + this.type)
+            self = $(e.currentTarget).data('bs.' + this.type);
           if (!self) {
-            self = new this.constructor(e.currentTarget, this.getDelegateOptions())
+              self = new this.constructor(e.currentTarget, this.getDelegateOptions());
             $(e.currentTarget).data('bs.' + this.type, self)
           }
         }
 
         if (e) {
-          self.inState.click = !self.inState.click
-          if (self.isInStateTrue()) self.enter(self)
+            self.inState.click = !self.inState.click;
+            if (self.isInStateTrue()) self.enter(self);
           else self.leave(self)
         } else {
           self.tip().hasClass('in') ? self.leave(self) : self.enter(self)
         }
-      }
+      };
 
       Tooltip.prototype.destroy = function () {
-        var that = this
-        clearTimeout(this.timeout)
+          var that = this;
+          clearTimeout(this.timeout);
         this.hide(function () {
-          that.$element.off('.' + that.type).removeData('bs.' + that.type)
+            that.$element.off('.' + that.type).removeData('bs.' + that.type);
           if (that.$tip) {
             that.$tip.detach()
           }
-          that.$tip = null
-          that.$arrow = null
+            that.$tip = null;
+            that.$arrow = null;
           that.$viewport = null
         })
-      }
+      };
 
 
       // TOOLTIP PLUGIN DEFINITION
@@ -1330,27 +1330,27 @@ if (mg_jquery_exists()) {
 
       function Plugin(option) {
         return this.each(function () {
-          var $this   = $(this)
-          var data    = $this.data('bs.tooltip')
-          var options = typeof option == 'object' && option
+            var $this = $(this);
+            var data = $this.data('bs.tooltip');
+            var options = typeof option == 'object' && option;
 
-          if (!data && /destroy|hide/.test(option)) return
-          if (!data) $this.data('bs.tooltip', (data = new Tooltip(this, options)))
+            if (!data && /destroy|hide/.test(option)) return;
+            if (!data) $this.data('bs.tooltip', (data = new Tooltip(this, options)));
           if (typeof option == 'string') data[option]()
         })
       }
 
-      var old = $.fn.tooltip
+        var old = $.fn.tooltip;
 
-      $.fn.tooltip             = Plugin
-      $.fn.tooltip.Constructor = Tooltip
+        $.fn.tooltip = Plugin;
+        $.fn.tooltip.Constructor = Tooltip;
 
 
       // TOOLTIP NO CONFLICT
       // ===================
 
       $.fn.tooltip.noConflict = function () {
-        $.fn.tooltip = old
+          $.fn.tooltip = old;
         return this
       }
 
@@ -1374,65 +1374,65 @@ if (mg_jquery_exists()) {
 
       var Popover = function (element, options) {
         this.init('popover', element, options)
-      }
+      };
 
-      if (!$.fn.tooltip) throw new Error('Popover requires tooltip.js')
+        if (!$.fn.tooltip) throw new Error('Popover requires tooltip.js');
 
-      Popover.VERSION  = '3.3.5'
+        Popover.VERSION = '3.3.5';
 
       Popover.DEFAULTS = $.extend({}, $.fn.tooltip.Constructor.DEFAULTS, {
         placement: 'right',
         trigger: 'click',
         content: '',
         template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
-      })
+      });
 
 
       // NOTE: POPOVER EXTENDS tooltip.js
       // ================================
 
-      Popover.prototype = $.extend({}, $.fn.tooltip.Constructor.prototype)
+        Popover.prototype = $.extend({}, $.fn.tooltip.Constructor.prototype);
 
-      Popover.prototype.constructor = Popover
+        Popover.prototype.constructor = Popover;
 
       Popover.prototype.getDefaults = function () {
         return Popover.DEFAULTS
-      }
+      };
 
       Popover.prototype.setContent = function () {
-        var $tip    = this.tip()
-        var title   = this.getTitle()
-        var content = this.getContent()
+          var $tip = this.tip();
+          var title = this.getTitle();
+          var content = this.getContent();
 
-        $tip.find('.popover-title')[this.options.html ? 'html' : 'text'](title)
+          $tip.find('.popover-title')[this.options.html ? 'html' : 'text'](title);
         $tip.find('.popover-content').children().detach().end()[ // we use append for html objects to maintain js events
           this.options.html ? (typeof content == 'string' ? 'html' : 'append') : 'text'
-        ](content)
+            ](content);
 
-        $tip.removeClass('fade top bottom left right in')
+          $tip.removeClass('fade top bottom left right in');
 
         // IE8 doesn't accept hiding via the `:empty` pseudo selector, we have to do
         // this manually by checking the contents.
         if (!$tip.find('.popover-title').html()) $tip.find('.popover-title').hide()
-      }
+      };
 
       Popover.prototype.hasContent = function () {
         return this.getTitle() || this.getContent()
-      }
+      };
 
       Popover.prototype.getContent = function () {
-        var $e = this.$element
-        var o  = this.options
+          var $e = this.$element;
+          var o = this.options;
 
         return $e.attr('data-content')
           || (typeof o.content == 'function' ?
                 o.content.call($e[0]) :
                 o.content)
-      }
+      };
 
       Popover.prototype.arrow = function () {
         return (this.$arrow = this.$arrow || this.tip().find('.arrow'))
-      }
+      };
 
 
       // POPOVER PLUGIN DEFINITION
@@ -1440,27 +1440,27 @@ if (mg_jquery_exists()) {
 
       function Plugin(option) {
         return this.each(function () {
-          var $this   = $(this)
-          var data    = $this.data('bs.popover')
-          var options = typeof option == 'object' && option
+            var $this = $(this);
+            var data = $this.data('bs.popover');
+            var options = typeof option == 'object' && option;
 
-          if (!data && /destroy|hide/.test(option)) return
-          if (!data) $this.data('bs.popover', (data = new Popover(this, options)))
+            if (!data && /destroy|hide/.test(option)) return;
+            if (!data) $this.data('bs.popover', (data = new Popover(this, options)));
           if (typeof option == 'string') data[option]()
         })
       }
 
-      var old = $.fn.popover
+        var old = $.fn.popover;
 
-      $.fn.popover             = Plugin
-      $.fn.popover.Constructor = Popover
+        $.fn.popover = Plugin;
+        $.fn.popover.Constructor = Popover;
 
 
       // POPOVER NO CONFLICT
       // ===================
 
       $.fn.popover.noConflict = function () {
-        $.fn.popover = old
+          $.fn.popover = old;
         return this
       }
 
@@ -1565,7 +1565,7 @@ function mg_cat_position(str, args) {
 function MGScale(args) {
   // big wrapper around d3 scale that automatically formats & calculates scale bounds
   // according to the data, and handles other niceties.
-  var scaleArgs = {}
+    var scaleArgs = {};
   scaleArgs.use_inflator = false;
   scaleArgs.zero_bottom = false;
   scaleArgs.scaleType = 'numerical';
@@ -1576,23 +1576,23 @@ function MGScale(args) {
     scaleArgs.scale_name = scaleArgs.namespace.toUpperCase();
     scaleArgs.scalefn_name = scaleArgs.namespace + 'f';
     return this;
-  }
+  };
 
   this.scaleName = function(scaleName) {
     scaleArgs.scale_name = scaleName.toUpperCase();
     scaleArgs.scalefn_name = scaleName +'f';
     return this;
-  }
+  };
 
   this.inflateDomain = function(tf) {
     scaleArgs.use_inflator = tf;
     return this;
-  }
+  };
 
   this.zeroBottom = function(tf) {
     scaleArgs.zero_bottom = tf;
     return this;
-  }
+  };
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// all scale domains are either numerical (number, date, etc.) or categorical (factor, label, etc) /////
@@ -1637,18 +1637,18 @@ function MGScale(args) {
     scaleArgs.scaleType = 'numerical';
 
     return this;
-  }
+  };
 
   this.categoricalDomain = function(domain) {
     args.scales[scaleArgs.scale_name] = d3.scaleOrdinal().domain(domain);
     mg_add_scale_function(args, scaleArgs.scalefn_name, scaleArgs.scale_name, args[scaleArgs.namespace_accessor_name]);
     return this;
-  }
+  };
 
   this.categoricalDomainFromData = function() {
     // make args.categorical_variables.
     // lets make the categorical variables.
-    var all_data = mg_flatten_array(args.data)
+      var all_data = mg_flatten_array(args.data);
     //d3.set(data.map(function(d){return d[args.group_accessor]})).values()
     scaleArgs.categoricalVariables = d3.set(all_data.map(function(d) {
       return d[args[scaleArgs.namespace_accessor_name]] })).values();
@@ -1657,7 +1657,7 @@ function MGScale(args) {
 
     scaleArgs.scaleType = 'categorical';
     return this;
-  }
+  };
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////// all scale ranges are either positional (for axes, etc) or arbitrary (colors, size, etc) //////////
@@ -1675,7 +1675,7 @@ function MGScale(args) {
     }
 
     return this;
-  }
+  };
 
   this.categoricalRangeBands = function(range, halfway) {
     if (halfway === undefined) halfway = false;
@@ -1707,13 +1707,13 @@ function MGScale(args) {
     );
 
     return this;
-  }
+  };
 
   this.categoricalRange = function(range) {
     args.scales[scaleArgs.scale_name].range(range);
     mg_add_scale_function(args, scaleArgs.scalefn_name, scaleArgs.scale_name, args[scaleArgs.namespace_accessor_name]);
     return this;
-  }
+  };
 
   this.categoricalColorRange = function() {
     args.scales[scaleArgs.scale_name] = args.scales[scaleArgs.scale_name].domain().length > 10
@@ -1726,12 +1726,12 @@ function MGScale(args) {
 
     mg_add_scale_function(args, scaleArgs.scalefn_name, scaleArgs.scale_name, args[scaleArgs.namespace_accessor_name]);
     return this;
-  }
+  };
 
   this.clamp = function(yn) {
     args.scales[scaleArgs.scale_name].clamp(yn);
     return this;
-  }
+  };
 
   return this;
 }
@@ -1794,15 +1794,13 @@ function mg_min_max_numerical(args, scaleArgs, additional_data_arrays) {
 
   min_val = args['min_' + namespace] || min_val;
   max_val = args['max_' + namespace] || max_val;
-  // if there's a single data point, we should custom-set the min and max values.
-
-  if (min_val === max_val && !(args['min_' + namespace] && args['max_' + namespace])) {
-
+    // if there's a single data point, we should custom-set the max values
+    // so we're displaying some kind of range
+    if (min_val === max_val && args['min_' + namespace] === undefined &&
+        args['max_' + namespace] === undefined) {
     if (mg_is_date(min_val)) {
       max_val = new Date(MG.clone(min_val).setDate(min_val.getDate() + 1));
-      min_val = new Date(MG.clone(min_val).setDate(min_val.getDate() - 1));
     } else if (typeof min_val === 'number') {
-      min_val = min_val - 1;
       max_val = min_val + 1;
       mg_force_xax_count_to_be_two(args);
     }
@@ -2729,52 +2727,6 @@ function mg_bar_add_zero_line (args) {
       .attr('stroke', 'black')
       .attr('opacity', .2);
   }
-}
-
-function set_min_max_y (args) {
-  // flatten data
-  // remove weird data, if log.
-  var data = mg_flatten_array(args.data);
-
-  if (args.y_scale_type === 'log') {
-    data = data.filter(function (d) {
-      return d[args.y_accessor] > 0;
-    });
-  }
-
-  if (args.baselines) {
-    data = data.concat(args.baselines);
-  }
-
-  var extents = d3.extent(data, function (d) {
-    return d[args.y_accessor];
-  });
-
-  var my = {};
-  my.min = extents[0];
-  my.max = extents[1];
-  // the default case is for the y-axis to start at 0, unless we explicitly want it
-  // to start at an arbitrary number or from the data's minimum value
-  if (my.min >= 0 && !args.min_y && !args.min_y_from_data) {
-    my.min = 0;
-  }
-
-  mg_change_y_extents_for_bars(args, my);
-  my.min = (args.min_y !== null) ? args.min_y : my.min;
-
-  my.max = (args.max_y !== null) ? args.max_y : (my.max < 0) ? my.max + (my.max - my.max * args.inflator) : my.max * args.inflator;
-
-  if (args.y_scale_type !== 'log' && my.min < 0) {
-    my.min = my.min - (my.min - my.min * args.inflator);
-  }
-
-  if (!args.min_y && args.min_y_from_data) {
-    var buff = (my.max - my.min) * .01;
-    my.min = extents[0] - buff;
-    my.max = extents[1] + buff;
-  }
-  args.processed.min_y = my.min;
-  args.processed.max_y = my.max;
 }
 
 function mg_y_domain_range (args, scale) {
@@ -3785,7 +3737,7 @@ function mg_remove_outdated_lines(svg, args) {
 function mg_raise_container_error(container, args) {
   if (container.empty()) {
     console.warn('The specified target element "' + args.target + '" could not be found in the page. The chart will not be rendered.');
-    return;
+
   }
 }
 
@@ -4090,7 +4042,7 @@ function mg_mouseover_tspan(svg, text) {
   this.font_size = function(pts) {
     this.tspan.attr('font-size', pts);
     return this;
-  }
+  };
 
   this.x = function(x) {
     this.tspan.attr('x', x);
@@ -4124,7 +4076,7 @@ function mg_mouseover_row(row_number, container, rargs) {
 
   this.text = function(text) {
     return mg_mouseover_tspan(rrr, text);
-  }
+  };
   return this;
 }
 
@@ -4141,7 +4093,7 @@ function mg_mouseover_text(args, rargs) {
     var rrr = mg_mouseover_row(that.row_number, that.text_container, rargs);
     that.row_number += 1;
     return rrr;
-  }
+  };
 
   return this;
 }
@@ -4538,7 +4490,8 @@ MG.button_layout = function(target) {
   'use strict';
 
   function mg_line_color_text(elem, d, args) {
-    elem.classed('mg-hover-line' + d.line_id + '-color', args.colors === null)
+      elem.classed('mg-hover-line-color', args.color === null)
+          .classed('mg-hover-line' + d.line_id + '-color', args.colors === null)
       .attr('fill', args.colors === null ? '' : args.colors[d.line_id - 1]);
   }
 
@@ -4649,6 +4602,7 @@ MG.button_layout = function(target) {
         svg.append('path')
           .classed('mg-main-area', true)
           .classed('mg-area' + line_id, true)
+            .classed('mg-area-color', args.colors === null)
           .classed('mg-area' + line_id + '-color', args.colors === null)
           .attr('d', plot.area(args.data[which_line]))
           .attr('fill', args.colors === null ? '' : args.colors[line_id - 1])
@@ -4660,7 +4614,8 @@ MG.button_layout = function(target) {
   }
 
   function mg_default_color_for_path(this_path, line_id) {
-    this_path.classed('mg-line' + (line_id) + '-color', true);
+      this_path.classed('mg-line-color', true)
+          .classed('mg-line' + (line_id) + '-color', true);
   }
 
   function mg_color_line(args, this_path, which_line, line_id) {
@@ -4767,7 +4722,8 @@ MG.button_layout = function(target) {
             legend_text.attr('fill', args.colors[which_line]);
           }
         } else {
-          legend_text.classed('mg-line' + (line_id) + '-legend-color', true);
+            legend_text.classed('mg-line-legend-color', true)
+                .classed('mg-line' + (line_id) + '-legend-color', true);
         }
 
         mg_prevent_vertical_overlap(plot.legend_group.selectAll('.mg-line-legend text').nodes(), args);
@@ -5177,14 +5133,18 @@ MG.button_layout = function(target) {
       svg.selectAll('circle.mg-line-rollover-circle')
         .style('opacity', 0);
 
-      d.values.forEach(function(datum) {
+        d.values.forEach(function (datum, index, list) {
+            if (args.missing_is_hidden && list[index]['_missing']) {
+                return;
+            }
+
         if (mg_data_in_plot_bounds(datum, args)) mg_update_aggregate_rollover_circle(args, svg, datum);
       });
     } else if ((args.missing_is_hidden && d['_missing']) || d[args.y_accessor] === null) {
       // disable rollovers for hidden parts of the line
       // recall that hidden parts are missing data ranges and possibly also
       // data points that have been explicitly identified as missing
-      return;
+
     } else {
       // show circle on mouse-overed rect
       if (mg_data_in_plot_bounds(d, args)) {
@@ -5303,7 +5263,7 @@ MG.button_layout = function(target) {
       new MG.scale_factory(args)
         .namespace('x')
         .numericalDomainFromData()
-        .numericalRange('bottom')
+          .numericalRange('bottom');
 
       var baselines = (args.baselines || []).map(function(d) {
         return d[args.y_accessor];
@@ -5744,7 +5704,7 @@ function mg_color_point_mouseover(args, elem, d) {
         (args.max_x === null || d[x] <= args.max_x) &&
         (args.min_y === null || d[y] >= args.min_y) &&
         (args.max_y === null || d[y] <= args.max_y);
-    })
+    });
     return new_data;
   }
 
@@ -6175,8 +6135,8 @@ function mg_color_point_mouseover(args, elem, d) {
     if (args.legend_target) {
 
       var div = d3.select(args.legend_target).append('div').classed('mg-bar-target-legend', true);
-      
-      if (args.orientation == 'horizontal') labels = args.scales.Y.domain()
+
+        if (args.orientation == 'horizontal') labels = args.scales.Y.domain();
       else labels = args.scales.X.domain();
 
       labels.forEach(function(label) {
@@ -6198,7 +6158,7 @@ function mg_color_point_mouseover(args, elem, d) {
     // get labels
 
     var labels;
-    if (args.orientation=='horizontal') labels = args.scales.Y.domain()
+      if (args.orientation == 'horizontal') labels = args.scales.Y.domain();
     else labels = args.scales.X.domain();
 
     var lineCount = 0;
@@ -6224,7 +6184,7 @@ function mg_color_point_mouseover(args, elem, d) {
       sub_container.append('tspan')
         .text('\u25a0 ')
         .attr('fill', args.scales.COLOR(label))
-        .attr('font-size', 20)
+          .attr('font-size', 20);
       sub_container.append('tspan')
         .text(label)
         .attr('font-weight', 300)
@@ -6502,15 +6462,15 @@ function mg_color_point_mouseover(args, elem, d) {
             l = length_scale(0);
           }
           return l;
-        }
+        };
 
         length_map = function(d) {
           return Math.abs(length_scalefn(d) - length_scale(0));
-        }
+        };
 
         reference_length_map = function(d) {
           return Math.abs(length_scale(d[args.reference_accessor]) - length_scale(0));
-        }
+        };
 
         reference_length_coord_fn = function(d){
           return length_scale(d[args.reference_accessor]);
@@ -6535,15 +6495,15 @@ function mg_color_point_mouseover(args, elem, d) {
           var l;
           l = length_scale(0);
           return l;
-        }
+        };
 
         length_map = function(d) {
           return Math.abs(length_scalefn(d) - length_scale(0));
-        }
+        };
 
         reference_length_map = function(d) {
           return Math.abs(length_scale(d[args.reference_accessor]) - length_scale(0));
-        }
+        };
 
         reference_length_coord_fn = function(d){
           return length_scale(0);
@@ -6602,7 +6562,7 @@ function mg_color_point_mouseover(args, elem, d) {
       if (args.reference_accessor !== null) {
         var reference_data = data.filter(function(d){
           return d.hasOwnProperty(args.reference_accessor);
-        })
+        });
         var reference_bars = barplot.selectAll('.mg-categorical-reference')
           .data(reference_data)
           .enter()
@@ -6628,7 +6588,7 @@ function mg_color_point_mouseover(args, elem, d) {
 
         var comparison_data = data.filter(function(d) {
           return d.hasOwnProperty(args.comparison_accessor);
-        })
+        });
         var comparison_marks = barplot.selectAll('.mg-categorical-comparison')
           .data(comparison_data)
           .enter()
@@ -6751,7 +6711,7 @@ function mg_color_point_mouseover(args, elem, d) {
 
         length_coord_map = function(d){
           return mg_get_plot_top(args);
-        }
+        };
 
         length_map = function(d) {
           return args.height -args.top-args.bottom-args.buffer*2
@@ -6776,7 +6736,7 @@ function mg_color_point_mouseover(args, elem, d) {
           var l;
           l = length_scale(0);
           return l;
-        }
+        };
 
         length_map = function(d) {
           return args.width -args.left-args.right-args.buffer*2
@@ -6829,7 +6789,7 @@ function mg_color_point_mouseover(args, elem, d) {
           return w;
         });
 
-      bars.attr(length, length_map)
+        bars.attr(length, length_map);
       bars.attr(width, function(d) {
         return args.bar_thickness;
       });
@@ -6877,7 +6837,7 @@ function mg_color_point_mouseover(args, elem, d) {
           if (args.predictor_accessor || args.baseline_accessor) {
             row = mouseover.mouseover_row();
 
-            if (args.predictor_accessor) row.text(mg_format_data_for_mouseover(args, d, null, args.predictor_accessor, false))
+              if (args.predictor_accessor) row.text(mg_format_data_for_mouseover(args, d, null, args.predictor_accessor, false));
             if (args.baseline_accessor) row.text(mg_format_data_for_mouseover(args, d, null, args.baseline_accessor, false))
           }
         }
@@ -7348,7 +7308,7 @@ function mg_process_scale_ticks(args, axis) {
     max = args.processed.max_x;
   } else if (axis === 'y') {
     accessor = args.y_accessor;
-    scale_ticks = args.scales.Y.ticks(args.yax_count)
+      scale_ticks = args.scales.Y.ticks(args.yax_count);
     max = args.processed.max_y;
   }
 
@@ -8027,7 +7987,7 @@ var time_rollover_format = function(f, d, accessor, utc) {
     fd = d[accessor];
   }
   return fd;
-}
+};
 
 // define our rollover format for numbers
 var number_rollover_format = function(f, d, accessor) {
@@ -8040,7 +8000,7 @@ var number_rollover_format = function(f, d, accessor) {
     fd = d[accessor];
   }
   return fd;
-}
+};
 
 function mg_format_y_rollover(args, num, d) {
   var formatted_y;
