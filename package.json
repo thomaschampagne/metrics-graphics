@@ -1,6 +1,6 @@
 {
   "name": "metrics-graphics-fastring",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A library optimized for concise, principled data graphics and layouts",
   "main": "dist/metricsgraphics.js",
   "scripts": {
