@@ -752,7 +752,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       show_rollover_text: true,
       show_confidence_band: null, // given [l, u] shows a confidence at each point from l to u
       xax_format: null, // xax_format is a function that formats the labels for the x axis.
-      area: true,
+      area: true, // Can be also an array to select lines having areas (e.g. [1, 3])
+      area_flip_under_zero: false, // Area will be flipped under zero baseline when values are negatives
       chart_type: 'line',
       data: [],
       decimals: 2, // the number of decimals in any rollover
@@ -4123,9 +4124,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var mg_add_area_generator = function mg_add_area_generator(_ref3, plot) {
       var scalefns = _ref3.scalefns,
           scales = _ref3.scales,
-          interpolate = _ref3.interpolate;
+          interpolate = _ref3.interpolate,
+          area_flip_under_zero = _ref3.area_flip_under_zero;
 
-      plot.area = d3.area().defined(plot.line.defined()).x(scalefns.xf).y0(scales.Y.range()[0]).y1(scalefns.yf).curve(interpolate);
+
+      var areaBaselineValue = area_flip_under_zero ? scales.Y(0) : scales.Y.range()[0];
+
+      plot.area = d3.area().defined(plot.line.defined()).x(scalefns.xf).y0(function () {
+        return areaBaselineValue;
+      }).y1(scalefns.yf).curve(interpolate);
     };
 
     var mg_add_flat_line_generator = function mg_add_flat_line_generator(_ref4, plot) {
@@ -4645,7 +4652,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         var existing_line = svg.select('path.mg-main-line.mg-line' + line_id);
 
         mg_add_confidence_band(args, plot, svg, line_id);
-        mg_add_area(args, plot, svg, i, line_id);
+
+        if (Array.isArray(args.area)) {
+          if (args.area.indexOf(line_id) !== -1) {
+            mg_add_area(args, plot, svg, i, line_id);
+          }
+        } else {
+          mg_add_area(args, plot, svg, i, line_id);
+        }
+
         mg_add_line(args, plot, svg, existing_line, i, line_id);
         mg_add_legend_element(args, plot, i, line_id);
 
@@ -4672,7 +4687,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       plot.data_median = 0;
       plot.update_transition_duration = args.transition_on_update ? 1000 : 0;
-      plot.display_area = args.area && !args.use_data_y_min && args.data.length <= 1 && args.aggregate_rollover === false;
+      plot.display_area = args.area && !args.use_data_y_min && args.data.length <= 1 && args.aggregate_rollover === false || Array.isArray(args.area) && args.area.length > 0;
       plot.legend_text = '';
       mg_line_graph_generators(args, plot, svg);
       plot.existing_band = svg.selectAll('.mg-confidence-band').nodes();
