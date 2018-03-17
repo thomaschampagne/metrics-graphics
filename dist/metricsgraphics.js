@@ -709,6 +709,10 @@ MG.data_graphic = function (args) {
     min_y: null, // if set, y axis starts at an arbitrary value
     min_y_from_data: false, // if set, y axis will start at minimum value rather than at 0
     point_size: 2.5, // the size of the dot that appears on a line on mouse-over
+    active_point_on_lines: false, // if set, active dot on lines will be displayed.
+    active_point_accessor: 'active', // data accessor value to determine if a point is active or not
+    active_point_size: 2, // the size of the dot that appears on a line when
+    points_always_visible: false, // whether to always display data points and not just on hover
     x_accessor: 'date',
     xax_units: '',
     x_label: '',
@@ -748,7 +752,7 @@ MG.data_graphic = function (args) {
     show_rollover_text: true,
     show_confidence_band: null, // given [l, u] shows a confidence at each point from l to u
     xax_format: null, // xax_format is a function that formats the labels for the x axis.
-    area: true,
+    area: true, // Can be also an array to select lines having areas (e.g. [1, 3])
     flip_area_under_y_value: null, // Specify a Y baseline number value to flip area under it.
     chart_type: 'line',
     data: [],
@@ -4598,6 +4602,11 @@ MG.button_layout = function (target) {
   var mg_draw_all_line_elements = function mg_draw_all_line_elements(args, plot, svg) {
     mg_remove_dangling_bands(plot, svg);
 
+    // If option activated, remove existing active points if exists
+    if (args.active_point_on_lines) {
+      svg.selectAll('circle.mg-shown-active-point').remove();
+    }
+
     for (var i = args.data.length - 1; i >= 0; i--) {
       var this_data = args.data[i];
 
@@ -4612,13 +4621,30 @@ MG.button_layout = function (target) {
 
       args.data[i].line_id = line_id;
 
+      // If option activated, add active points for each lines
+      if (args.active_point_on_lines) {
+        svg.selectAll('circle-' + line_id).data(args.data[i]).enter().filter(function (d) {
+          return d[args.active_point_accessor];
+        }).append('circle').attr('class', 'mg-area' + line_id + '-color mg-shown-active-point').attr('cx', args.scalefns.xf).attr('cy', args.scalefns.yf).attr('r', function () {
+          return args.active_point_size;
+        });
+      }
+
       if (this_data.length === 0) {
         continue;
       }
       var existing_line = svg.select('path.mg-main-line.mg-line' + line_id);
 
       mg_add_confidence_band(args, plot, svg, line_id);
-      mg_add_area(args, plot, svg, i, line_id);
+
+      if (Array.isArray(args.area)) {
+        if (args.area.indexOf(line_id) !== -1) {
+          mg_add_area(args, plot, svg, i, line_id);
+        }
+      } else {
+        mg_add_area(args, plot, svg, i, line_id);
+      }
+
       mg_add_line(args, plot, svg, existing_line, i, line_id);
       mg_add_legend_element(args, plot, i, line_id);
 
@@ -4645,7 +4671,7 @@ MG.button_layout = function (target) {
 
     plot.data_median = 0;
     plot.update_transition_duration = args.transition_on_update ? 1000 : 0;
-    plot.display_area = args.area && !args.use_data_y_min && args.data.length <= 1 && args.aggregate_rollover === false;
+    plot.display_area = args.area && !args.use_data_y_min && args.data.length <= 1 && args.aggregate_rollover === false || Array.isArray(args.area) && args.area.length > 0;
     plot.legend_text = '';
     mg_line_graph_generators(args, plot, svg);
     plot.existing_band = svg.selectAll('.mg-confidence-band').nodes();
@@ -6303,7 +6329,7 @@ MG.data_table = function (args) {
     main value
     comparative measure
     any number of ranges
-     additional args:
+      additional args:
     no title
     xmin, xmax
     format: percentage
