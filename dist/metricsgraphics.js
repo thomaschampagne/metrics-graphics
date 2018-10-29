@@ -1,4 +1,4 @@
-(function(root, factory) {
+;(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     define(['d3'], factory);
   } else if (typeof exports === 'object') {
@@ -418,6 +418,37 @@ function merge_with_defaults(obj) {
 
 MG.merge_with_defaults = merge_with_defaults;
 
+function options_to_defaults(obj) {
+  return Object.keys(obj).reduce(function (r, k) {
+    r[k] = obj[k][0];
+    return r;
+  }, {});
+}
+
+function compare_type(type, value) {
+  if (value == null) return true; // allow null or undefined
+  if (typeof type === 'string') {
+    if (type.substr(-2) === '[]') {
+      if (!is_array(value)) return false;
+      return value.every(function (i) {
+        return compare_type(type.slice(0, -2), i);
+      });
+    }
+    return (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === type || value === type || type.length === 0 || type === 'array' && is_array(value);
+  }
+  if (typeof type === 'function') return value === type || value instanceof type;
+  return is_array(type) && !!~type.findIndex(function (i) {
+    return compare_type(i, value);
+  });
+}
+
+function mg_validate_option(key, value) {
+  if (!is_array(MG.options[key])) return false; // non-existent option
+  var typeDef = MG.options[key][1];
+  if (!typeDef) return true; // not restricted type
+  return compare_type(typeDef, value);
+}
+
 function number_of_values(data, accessor, value) {
   var values = data.filter(function (d) {
     return d[accessor] === value;
@@ -585,11 +616,19 @@ function wrap_text(text, width, token, tspanAttrs) {
 
 MG.wrap_text = wrap_text;
 
-function register(chartType, descriptor, defaults) {
+function register(chartType, descriptor, options) {
+  var defaults = options ? options_to_defaults(options) : {};
   MG.charts[chartType] = {
     descriptor: descriptor,
-    defaults: defaults || {}
+    defaults: defaults
   };
+  if (options) {
+    Object.keys(options).map(function (key) {
+      if (!(key in MG.options)) {
+        MG.options[key] = options[key];
+      }
+    });
+  }
 }
 
 MG.register = register;
@@ -669,128 +708,158 @@ MG.deprecations = {
 MG.globals.link = false;
 MG.globals.version = "1.1";
 
+MG.options = { // <name>: [<defaultValue>, <availableType>]
+  x_axis_type: [null, ['categorical']], // TO BE INTRODUCED IN 2.10
+  y_axis_type: [null, ['categorical']], // TO BE INTRODUCED IN 2.10
+  y_padding_percentage: [0.05, 'number'], // for categorical scales
+  y_outer_padding_percentage: [0.1, 'number'], // for categorical scales
+  ygroup_padding_percentage: [0.25, 'number'], // for categorical scales
+  ygroup_outer_padding_percentage: [0, 'number'], // for categorical scales
+  x_padding_percentage: [0.05, 'number'], // for categorical scales
+  x_outer_padding_percentage: [0.1, 'number'], // for categorical scales
+  xgroup_padding_percentage: [0.25, 'number'], // for categorical scales
+  xgroup_outer_padding_percentage: [0, 'number'], // for categorical scales
+  ygroup_accessor: [null, 'string'],
+  xgroup_accessor: [null, 'string'],
+  y_categorical_show_guides: [false, 'boolean'],
+  x_categorical_show_guide: [false, 'boolean'],
+  rotate_x_labels: [0, 'number'],
+  rotate_y_labels: [0, 'number'],
+  scales: [{}],
+  scalefns: [{}],
+  // Data
+  data: [[], ['object[]', 'number[]']], // the data object
+  missing_is_zero: [false, 'boolean'], // assume missing observations are zero
+  missing_is_hidden: [false, 'boolean'], // show missing observations as missing line segments
+  missing_is_hidden_accessor: [null, 'string'], // the accessor for identifying observations as missing
+  utc_time: [false, 'boolean'], // determines whether to use a UTC or local time scale
+  x_accessor: ['date', 'string'], // the data element that's the x-accessor
+  x_sort: [true, 'boolean'], // determines whether to sort the x-axis' values
+  y_accessor: ['value', ['string', 'string[]']], // the data element that's the y-accessor
+  // Axes
+  axes_not_compact: [true, 'boolean'], // determines whether to draw compact or non-compact axes
+  european_clock: [false, 'boolean'], // determines whether to show labels using a 24-hour clock
+  inflator: [10 / 9, 'number'], // a multiplier for inflating max_x and max_y
+  max_x: [null, ['number', Date]], // the maximum x-value
+  max_y: [null, ['number', Date]], // the maximum y-value
+  min_x: [null, ['number', Date]], // the minimum x-value
+  min_y: [null, ['number', Date]], // the minimum y-value
+  min_y_from_data: [false, 'boolean'], // starts y-axis at data's minimum value
+  show_year_markers: [false, 'boolean'], // determines whether to show year markers along the x-axis
+  show_secondary_x_label: [true, 'boolean'], // determines whether to show years along the x-axis
+  small_text: [false, 'boolean'],
+  x_extended_ticks: [false, 'boolean'], // determines whether to extend the x-axis ticks across the chart
+  x_axis: [true, 'boolean'], // determines whether to display the x-axis
+  x_label: ['', 'string'], // the label to show below the x-axis
+  xax_count: [6, 'number'], // the number of x-axis ticks
+  xax_format: [null, 'function'], // a function that formats the x-axis' labels
+  xax_tick_length: [5, 'number'], // the x-axis' tick length in pixels
+  xax_units: ['', 'string'], // a prefix symbol to be shown alongside the x-axis' labels
+  x_scale_type: ['linear', 'log'], // the x-axis scale type
+  y_axis: [true, 'boolean'], // determines whether to display the y-axis
+  x_axis_position: ['bottom'], // string
+  y_axis_position: ['left'], // string
+  y_extended_ticks: [false, 'boolean'], // determines whether to extend the y-axis ticks across the chart
+  y_label: ['', 'string'], // the label to show beside the y-axis
+  y_scale_type: ['linear', ['linear', 'log']], // the y-axis scale type
+  yax_count: [3, 'number'], // the number of y-axis ticks
+  yax_format: [null, 'function'], // a function that formats the y-axis' labels
+  yax_tick_length: [5, 'number'], // the y-axis' tick length in pixels
+  yax_units: ['', 'string'], // a prefix symbol to be shown alongside the y-axis' labels
+  yax_units_append: [false, 'boolean'], // determines whether to append rather than prepend units
+  // GraphicOptions
+  aggregate_rollover: [false, 'boolean'], // links the lines in a multi-line graphic
+  animate_on_load: [false, 'boolean'], // determines whether lines are transitioned on first-load
+  area: [true, ['boolean', 'array']], // determines whether to fill the area below the line
+  flip_area_under_y_value: [null, 'number'], // Specify a Y baseline number value to flip area under it
+  baselines: [null, 'object[]'], // horizontal lines that indicate, say, goals.
+  chart_type: ['line', ['line', 'histogram', 'point', 'bar', 'missing-data']], // '{line, histogram, point, bar, missing-data}'],
+  color: [null, ['string', 'string[]']],
+  colors: [null, ['string', 'string[]']],
+  dasharrays: [null, ['string', 'string[]']], // determines whether to create lines with dasharray css property
+  custom_line_color_map: [[], 'number[]'], // maps an arbitrary set of lines to colors
+  decimals: [2, 'number'], // the number of decimals to show in a rollover
+  error: ['', 'string'], // does the graphic have an error that we want to communicate to users
+  format: ['count', ['count', 'percentage']], // the format of the data object (count or percentage)
+  full_height: [false, 'boolean'], // sets height to that of the parent, adjusts dimensions on window resize
+  full_width: [false, 'boolean'], // sets width to that of the parent, adjusts dimensions on window resize
+  interpolate: [d3.curveCatmullRom.alpha(0), [d3.curveBasisClosed, d3.curveBasisOpen, d3.curveBasis, d3.curveBundle, d3.curveCardinalClosed, d3.curveCardinalOpen, d3.curveCardinal, d3.curveCatmullRomClosed, d3.curveCatmullRomOpen, d3.curveLinearClosed, d3.curveLinear, d3.curveMonotoneX, d3.curveMonotoneY, d3.curveNatural, d3.curveStep, d3.curveStepAfter, d3.curveStepBefore]], // the interpolation function to use for rendering lines
+  legend: ['', 'string[]'], // an array of literals used to label lines
+  legend_target: ['', 'string'], // the DOM element to insert the legend in
+  linked: [false, 'boolean'], // used to link multiple graphics together
+  linked_format: ['%Y-%m-%d', 'string'], // specifies the format of linked rollovers
+  list: [false, 'boolean'], // automatically maps the data to x and y accessors
+  markers: [null, 'object[]'], // vertical lines that indicate, say, milestones
+  max_data_size: [null, 'number'], // for use with custom_line_color_map
+  missing_text: [null, 'string'], // The text to display for missing graphics
+  show_missing_background: [true, 'boolean'], // Displays a background for missing graphics
+  mousemove_align: ['right', 'string'], // implemented in point.js
+  x_mouseover: [null, ['string', 'function']],
+  y_mouseover: [null, ['string', 'function']],
+  mouseover: [null, 'function'], // custom rollover function
+  mousemove: [null, 'function'], // custom rollover function
+  mouseout: [null, 'function'], // custom rollover function
+  click: [null, 'function'],
+  point_size: [2.5, 'number'], // the radius of the dots in the scatterplot
+  active_point_on_lines: [false, 'boolean'], // if set, active dot on lines will be displayed.
+  active_point_accessor: ['active', 'string'], // data accessor value to determine if a point is active or not
+  active_point_size: [2, 'number'], // the size of the dot that appears on a line when
+  points_always_visible: [false, 'boolean'], //  whether to always display data points and not just on hover
+  rollover_time_format: [null, 'string'], // custom time format for rollovers
+  show_confidence_band: [null, 'string[]'], // determines whether to show a confidence band
+  show_rollover_text: [true, 'boolean'], // determines whether to show text for a data point on rollover
+  show_tooltips: [true, 'boolean'], // determines whether to display descriptions in tooltips
+  showActivePoint: [true, 'boolean'], // If enabled show active data point information in chart
+  target: ['#viz', ['string', HTMLElement]], // the DOM element to insert the graphic in
+  transition_on_update: [true, 'boolean'], // gracefully transitions the lines on data change
+  x_rug: [false, 'boolean'], // show a rug plot along the x-axis
+  y_rug: [false, 'boolean'], // show a rug plot along the y-axis
+  mouseover_align: ['right', ['right', 'left']],
+  brush: [null, ['xy', 'x', 'y']], // add brush function
+  brushing_selection_changed: [null, 'function'], // callback function on brushing. the first parameter are the arguments that correspond to this chart, the second parameter is the range of the selection
+  zoom_target: [null, 'object'], // the zooming target of brushing function
+  click_to_zoom_out: [true, 'boolean'], // if true and the graph is currently zoomed in, clicking on the graph will zoom out
+  // Layout
+  buffer: [8, 'number'], // the padding around the graphic
+  bottom: [45, 'number'], // the size of the bottom margin
+  center_title_full_width: [false, 'boolean'], // center title over entire graph
+  height: [220, 'number'], // the graphic's height
+  left: [50, 'number'], // the size of the left margin
+  right: [10, 'number'], // the size of the right margin
+  small_height_threshold: [120, 'number'], // maximum height for a small graphic
+  small_width_threshold: [160, 'number'], // maximum width for a small graphic
+  top: [65, 'number'], // the size of the top margin
+  width: [350, 'number'], // the graphic's width
+  title_y_position: [10, 'number'], // how many pixels from the top edge (0) should we show the title at
+  title: [null, 'string'],
+  description: [null, 'string']
+};
+
 MG.charts = {};
+
+MG.defaults = options_to_defaults(MG.options);
 
 MG.data_graphic = function (args) {
   'use strict';
 
-  var defaults = {
-    missing_is_zero: false, // if true, missing values will be treated as zeros
-    missing_is_hidden: false, // if true, missing values will appear as broken segments
-    missing_is_hidden_accessor: null, // the accessor that determines the boolean value for missing data points
-    legend: '', // an array identifying the labels for a chart's lines
-    legend_target: '', // if set, the specified element is populated with a legend
-    error: '', // if set, a graph will show an error icon and log the error to the console
-    animate_on_load: false, // animate lines on load
-    top: 65, // the size of the top margin
-    title_y_position: 10, // how many pixels from the top edge (0) should we show the title at
-    center_title_full_width: false, // center the title over the full graph (i.e. ignore left and right margins)
-    bottom: 45, // the size of the bottom margin
-    right: 10, // size of the right margin
-    left: 50, // size of the left margin
-    buffer: 8, // the buffer between the actual chart area and the margins
-    width: 350, // the width of the entire graphic
-    height: 220, // the height of the entire graphic
-    full_width: false, // sets the graphic width to be the width of the parent element and resizes dynamically
-    full_height: false, // sets the graphic width to be the width of the parent element and resizes dynamically
-    small_height_threshold: 120, // the height threshold for when smaller text appears
-    small_width_threshold: 160, // the width  threshold for when smaller text appears
-    xax_count: 6, // number of x axis ticks
-    xax_tick_length: 5, // x axis tick length
-    axes_not_compact: true,
-    yax_count: 3, // number of y axis ticks
-    yax_tick_length: 5, // y axis tick length
-    x_extended_ticks: false, // extends x axis ticks across chart - useful for tall charts
-    y_extended_ticks: false, // extends y axis ticks across chart - useful for long charts
-    y_scale_type: 'linear',
-    max_x: null,
-    max_y: null,
-    min_x: null,
-    min_y: null, // if set, y axis starts at an arbitrary value
-    min_y_from_data: false, // if set, y axis will start at minimum value rather than at 0
-    point_size: 2.5, // the size of the dot that appears on a line on mouse-over
-    active_point_on_lines: false, // if set, active dot on lines will be displayed.
-    active_point_accessor: 'active', // data accessor value to determine if a point is active or not
-    active_point_size: 2, // the size of the dot that appears on a line when
-    points_always_visible: false, // whether to always display data points and not just on hover
-    x_accessor: 'date',
-    xax_units: '',
-    x_label: '',
-    x_sort: true,
-    x_axis: true,
-    y_axis: true,
-    x_axis_position: 'bottom',
-    y_axis_position: 'left',
-    x_axis_type: null, // TO BE INTRODUCED IN 2.10
-    y_axis_type: null, // TO BE INTRODUCED IN 2.10
-    ygroup_accessor: null,
-    xgroup_accessor: null,
-    y_padding_percentage: 0.05, // for categorical scales
-    y_outer_padding_percentage: 0.1, // for categorical scales
-    ygroup_padding_percentage: 0.25, // for categorical scales
-    ygroup_outer_padding_percentage: 0, // for categorical scales
-    x_padding_percentage: 0.05, // for categorical scales
-    x_outer_padding_percentage: 0.1, // for categorical scales
-    xgroup_padding_percentage: 0.25, // for categorical scales
-    xgroup_outer_padding_percentage: 0, // for categorical scales
-    y_categorical_show_guides: false,
-    x_categorical_show_guide: false,
-    rotate_x_labels: 0,
-    rotate_y_labels: 0,
-    y_accessor: 'value',
-    y_label: '',
-    yax_units: '',
-    yax_units_append: false,
-    x_rug: false,
-    y_rug: false,
-    mouseover_align: 'right', // implemented in point.js
-    x_mouseover: null,
-    y_mouseover: null,
-    transition_on_update: true,
-    mouseover: null,
-    click: null,
-    show_rollover_text: true,
-    show_confidence_band: null, // given [l, u] shows a confidence at each point from l to u
-    xax_format: null, // xax_format is a function that formats the labels for the x axis.
-    area: true, // Can be also an array to select lines having areas (e.g. [1, 3])
-    flip_area_under_y_value: null, // Specify a Y baseline number value to flip area under it.
-    chart_type: 'line',
-    data: [],
-    decimals: 2, // the number of decimals in any rollover
-    format: 'count', // format = {count, percentage}
-    inflator: 10 / 9, // for setting y axis max
-    linked: false, // links together all other graphs with linked:true, so rollovers in one trigger rollovers in the others
-    linked_format: '%Y-%m-%d', // What granularity to link on for graphs. Default is at day
-    list: false,
-    baselines: null, // sets the baseline lines
-    markers: null, // sets the marker lines
-    scalefns: {},
-    scales: {},
-    utc_time: false,
-    european_clock: false,
-    show_year_markers: false,
-    show_secondary_x_label: true,
-    target: '#viz',
-    interpolate: d3.curveCatmullRom.alpha(0), // interpolation method to use when rendering lines; increase tension if your data is irregular and you notice artifacts
-    custom_line_color_map: [], // allows arbitrary mapping of lines to colors, e.g. [2,3] will map line 1 to color 2 and line 2 to color 3
-    colors: null, // UNIMPLEMENTED - allows direct color mapping to line colors. Will eventually require
-    max_data_size: null, // explicitly specify the the max number of line series, for use with custom_line_color_map
-    aggregate_rollover: false, // links the lines in a multi-line chart
-    show_tooltips: true, // if enabled, a chart's description will appear in a tooltip (requires jquery)
-    showActivePoint: true, // If enabled show active data point information in chart
-    brush: null, // add brushing function for this chart. could be set as 'xy', 'x', 'y' to restrict axis
-    zoom_target: null, // zooming target of brushing function. if not set the default is to zoom the current chart
-    brushing_selection_changed: null // callback function on brushing. the first parameter are the arguments that correspond to this chart, the second parameter is the range of the selection
-  };
-
-  MG.call_hook('global.defaults', defaults);
+  MG.call_hook('global.defaults', MG.defaults);
 
   if (!args) {
     args = {};
   }
 
-  var selected_chart = MG.charts[args.chart_type || defaults.chart_type];
-  merge_with_defaults(args, selected_chart.defaults, defaults);
+  for (var _key in args) {
+    if (!mg_validate_option(_key, args[_key])) {
+      if (!(_key in MG.options)) {
+        console.warn('Option ' + _key + ' not recognized');
+      } else {
+        console.warn('Option ' + _key + ' expected type ' + MG.options[_key][1] + ' but got ' + args[_key] + ' instead');
+      }
+    }
+  }
+
+  var selected_chart = MG.charts[args.chart_type || MG.defaults.chart_type];
+  merge_with_defaults(args, selected_chart.defaults, MG.defaults);
 
   if (args.list) {
     args.x_accessor = 0;
@@ -1834,7 +1903,9 @@ function rugPlacement(args, axisArgs) {
     coordinates.y2 = args.scalefns[ns + 'f'];
   }
   if (position === 'right') {
-    coordinates.x1 = mg_get_right(args) - 1, coordinates.x2 = mg_get_right(args) - args.rug_buffer_size, coordinates.y1 = args.scalefns[ns + 'f'];
+    coordinates.x1 = mg_get_right(args) - 1;
+    coordinates.x2 = mg_get_right(args) - args.rug_buffer_size;
+    coordinates.y1 = args.scalefns[ns + 'f'];
     coordinates.y2 = args.scalefns[ns + 'f'];
   }
   if (position === 'top') {
@@ -2232,11 +2303,12 @@ function categoricalLabels(args, axisArgs) {
     // grab group placement stuff.
     var coords = categoricalLabelPlacement(args, axisArgs, group);
 
+    var labels;
     group_g = mg_add_g(g, 'mg-group-' + mg_normalize(group));
     if (args[groupAccessor] !== null) {
-      var labels = group_g.append('text').classed('mg-barplot-group-label', true).attr('x', coords.group.x).attr('y', coords.group.y).attr('dy', coords.group.dy).attr('text-anchor', coords.group.textAnchor).text(group);
+      labels = group_g.append('text').classed('mg-barplot-group-label', true).attr('x', coords.group.x).attr('y', coords.group.y).attr('dy', coords.group.dy).attr('text-anchor', coords.group.textAnchor).text(group);
     } else {
-      var labels = group_g.selectAll('text').data(scale.domain()).enter().append('text').attr('x', coords.cat.x).attr('y', coords.cat.y).attr('dy', coords.cat.dy).attr('text-anchor', coords.cat.textAnchor).text(String);
+      labels = group_g.selectAll('text').data(scale.domain()).enter().append('text').attr('x', coords.cat.x).attr('y', coords.cat.y).attr('dy', coords.cat.dy).attr('text-anchor', coords.cat.textAnchor).text(String);
     }
     if (args['rotate_' + ns + '_labels']) {
       rotateLabels(labels, args['rotate_' + ns + '_labels']);
@@ -3609,7 +3681,7 @@ function mg_setup_mouseover_container(svg, args) {
 
   var mouseover_x = args.mouseover_align === 'right' ? mg_get_plot_right(args) : args.mouseover_align === 'left' ? mg_get_plot_left(args) : (args.width - args.left - args.right) / 2 + args.left;
 
-  var active_datapoint = svg.select('.mg-active-datapoint-container').append('text').attr('class', 'mg-active-datapoint').attr('xml:space', 'preserve').attr('text-anchor', text_anchor);
+  var active_datapoint = svg.select('.mg-active-datapoint-container').attr('transform', 'translate(0 -18)').append('text').attr('class', 'mg-active-datapoint').attr('xml:space', 'preserve').attr('text-anchor', text_anchor);
 
   // set the rollover text's position; if we have markers on two lines,
   // nudge up the rollover text a bit
@@ -3711,6 +3783,9 @@ function mg_mouseover_text(args, rargs) {
       };
       args.processed.raw_data = raw_data;
     }
+    if (['x', 'y'].some(function (dim) {
+      return range[dim][0] === range[dim][1];
+    })) return;
     // to avoid drawing outside the chart in the point chart, unnecessary in line chart.
     if (args.chart_type === 'point') {
       if (is_array_of_arrays(raw_data)) {
@@ -3720,6 +3795,7 @@ function mg_mouseover_text(args, rargs) {
       } else {
         args.data = raw_data.filter(filter_in_range_data(args, range));
       }
+      if (mg_flatten_array(args.data).length === 0) return;
     }
     ['x', 'y'].forEach(function (dim) {
       if (dim in range) args.processed['zoom_' + dim] = range[dim];else delete args.processed['zoom_' + dim];
@@ -3840,12 +3916,12 @@ function mg_mouseover_text(args, rargs) {
         isDragging = false;
         if (target === args) {
           MG.zoom_to_data_range(target, range);
-          svg.select('.mg-rollover-rect, .mg-voronoi').classed('mg-brushed', true);
+          if (args.click_to_zoom_out) svg.select('.mg-rollover-rect, .mg-voronoi').classed('mg-brushed', true);
         } else {
           var domain = MG.convert_range_to_domain(args, range);
           MG.zoom_to_data_domain(target, domain);
         }
-      } else {
+      } else if (args.click_to_zoom_out) {
         MG.zoom_to_raw_range(target);
       }
       if (mg_is_function(args.brushing_selection_changed)) args.brushing_selection_changed(args, range);
@@ -4245,10 +4321,9 @@ MG.button_layout = function (target) {
 };
 
 {
-  var mg_line_color_text = function mg_line_color_text(elem, _ref, _ref2) {
-    var line_id = _ref.line_id;
-    var color = _ref2.color,
-        colors = _ref2.colors;
+  var mg_line_color_text = function mg_line_color_text(elem, line_id, _ref) {
+    var color = _ref.color,
+        colors = _ref.colors;
 
     elem.classed('mg-hover-line-color', color === null).classed('mg-hover-line' + line_id + '-color', colors === null).attr('fill', colors === null ? '' : colors[line_id - 1]);
   };
@@ -4281,11 +4356,11 @@ MG.button_layout = function (target) {
     }
   };
 
-  var mg_add_area_generator = function mg_add_area_generator(_ref3, plot) {
-    var scalefns = _ref3.scalefns,
-        scales = _ref3.scales,
-        interpolate = _ref3.interpolate,
-        flip_area_under_y_value = _ref3.flip_area_under_y_value;
+  var mg_add_area_generator = function mg_add_area_generator(_ref2, plot) {
+    var scalefns = _ref2.scalefns,
+        scales = _ref2.scales,
+        interpolate = _ref2.interpolate,
+        flip_area_under_y_value = _ref2.flip_area_under_y_value;
 
 
     var areaBaselineValue = Number.isFinite(flip_area_under_y_value) ? scales.Y(flip_area_under_y_value) : scales.Y.range()[0];
@@ -4295,11 +4370,11 @@ MG.button_layout = function (target) {
     }).y1(scalefns.yf).curve(interpolate);
   };
 
-  var mg_add_flat_line_generator = function mg_add_flat_line_generator(_ref4, plot) {
-    var y_accessor = _ref4.y_accessor,
-        scalefns = _ref4.scalefns,
-        scales = _ref4.scales,
-        interpolate = _ref4.interpolate;
+  var mg_add_flat_line_generator = function mg_add_flat_line_generator(_ref3, plot) {
+    var y_accessor = _ref3.y_accessor,
+        scalefns = _ref3.scalefns,
+        scales = _ref3.scales,
+        interpolate = _ref3.interpolate;
 
     plot.flat_line = d3.line().defined(function (d) {
       return (d['_missing'] === undefined || d['_missing'] !== true) && d[y_accessor] !== null;
@@ -4308,11 +4383,11 @@ MG.button_layout = function (target) {
     }).curve(interpolate);
   };
 
-  var mg_add_line_generator = function mg_add_line_generator(_ref5, plot) {
-    var scalefns = _ref5.scalefns,
-        interpolate = _ref5.interpolate,
-        missing_is_zero = _ref5.missing_is_zero,
-        y_accessor = _ref5.y_accessor;
+  var mg_add_line_generator = function mg_add_line_generator(_ref4, plot) {
+    var scalefns = _ref4.scalefns,
+        interpolate = _ref4.interpolate,
+        missing_is_zero = _ref4.missing_is_zero,
+        y_accessor = _ref4.y_accessor;
 
     plot.line = d3.line().x(scalefns.xf).y(scalefns.yf).curve(interpolate);
 
@@ -4328,11 +4403,11 @@ MG.button_layout = function (target) {
     }
   };
 
-  var mg_add_confidence_band = function mg_add_confidence_band(_ref6, plot, svg, which_line) {
-    var show_confidence_band = _ref6.show_confidence_band,
-        transition_on_update = _ref6.transition_on_update,
-        data = _ref6.data,
-        target = _ref6.target;
+  var mg_add_confidence_band = function mg_add_confidence_band(_ref5, plot, svg, which_line) {
+    var show_confidence_band = _ref5.show_confidence_band,
+        transition_on_update = _ref5.transition_on_update,
+        data = _ref5.data,
+        target = _ref5.target;
 
     if (show_confidence_band) {
       var confidenceBand = void 0;
@@ -4349,10 +4424,10 @@ MG.button_layout = function (target) {
     }
   };
 
-  var mg_add_area = function mg_add_area(_ref7, plot, svg, which_line, line_id) {
-    var data = _ref7.data,
-        target = _ref7.target,
-        colors = _ref7.colors;
+  var mg_add_area = function mg_add_area(_ref6, plot, svg, which_line, line_id) {
+    var data = _ref6.data,
+        target = _ref6.target,
+        colors = _ref6.colors;
 
     var areas = svg.selectAll('.mg-main-area.mg-area' + line_id);
     if (plot.display_area) {
@@ -4374,8 +4449,8 @@ MG.button_layout = function (target) {
     this_path.classed('mg-line-color', true).classed('mg-line' + line_id + '-color', true);
   };
 
-  var mg_color_line = function mg_color_line(_ref8, this_path, which_line, line_id) {
-    var colors = _ref8.colors;
+  var mg_color_line = function mg_color_line(_ref7, this_path, which_line, line_id) {
+    var colors = _ref7.colors;
 
     if (colors) {
       // for now, if args.colors is not an array, then keep moving as if nothing happened.
@@ -4395,6 +4470,22 @@ MG.button_layout = function (target) {
       // this is the typical workflow
       // this_path.classed('mg-line' + (line_id) + '-color', true);
       mg_default_color_for_path(this_path, line_id);
+    }
+  };
+
+  var mg_dashes_line = function mg_dashes_line(_ref8, this_path, which_line, line_id) {
+    var dasharrays = _ref8.dasharrays;
+
+    if (dasharrays) {
+      // for now, if args.dasharrays is not an array, then keep moving as if nothing happened.
+      // if args.dasharrays is not long enough, default to the usual line_id.
+      if (dasharrays.constructor === Array) {
+        if (dasharrays[which_line]) {
+          this_path.attr('stroke-dasharray', dasharrays[which_line]);
+        }
+      } else if (dasharrays.constructor === String) {
+        this_path.attr('stroke-dasharray', dasharrays);
+      }
     }
   };
 
@@ -4432,6 +4523,7 @@ MG.button_layout = function (target) {
       var this_path = svg.append('path').attr('class', 'mg-main-line mg-line' + line_id);
 
       mg_color_line(args, this_path, which_line, line_id);
+      mg_dashes_line(args, this_path, which_line, line_id);
       mg_add_line_element(args, plot, this_path, which_line);
     }
   };
@@ -4512,8 +4604,8 @@ MG.button_layout = function (target) {
 
     if (colors && colors.constructor === Array) {
       circle.attr('class', function (_ref12) {
-        var line_id = _ref12.line_id;
-        return 'mg-line' + line_id;
+        var __line_id__ = _ref12.__line_id__;
+        return 'mg-line' + __line_id__;
       }).attr('fill', function (d, i) {
         return colors[i];
       }).attr('stroke', function (d, i) {
@@ -4521,8 +4613,8 @@ MG.button_layout = function (target) {
       });
     } else {
       circle.attr('class', function (_ref13, i) {
-        var line_id = _ref13.line_id;
-        return ['mg-line' + line_id, 'mg-line' + line_id + '-color', 'mg-area' + line_id + '-color'].join(' ');
+        var __line_id__ = _ref13.__line_id__;
+        return ['mg-line' + __line_id__, 'mg-line' + __line_id__ + '-color', 'mg-area' + __line_id__ + '-color'].join(' ');
       });
     }
     circle.classed('mg-line-rollover-circle', true);
@@ -4532,20 +4624,18 @@ MG.button_layout = function (target) {
     var data = _ref14.data,
         custom_line_color_map = _ref14.custom_line_color_map;
 
+    var _loop = function _loop(i) {
+      data[i].forEach(function (datum) {
+        datum.__index__ = i + 1;
+        datum.__line_id__ = custom_line_color_map.length > 0 ? custom_line_color_map[i] : i + 1;
+      });
+    };
+
     // update our data by setting a unique line id for each series
     // increment from 1... unless we have a custom increment series
 
     for (var i = 0; i < data.length; i++) {
-      for (var j = 0; j < data[i].length; j++) {
-        // Index is saved as original line id for the legend values
-        data[i][j].index = i + 1;
-        // if custom line-color map is set, use that instead of line_id (For colors)
-        if (custom_line_color_map.length > 0) {
-          data[i][j].line_id = custom_line_color_map[i];
-        } else {
-          data[i][j].line_id = i + 1;
-        }
-      }
+      _loop(i);
     }
   };
 
@@ -4564,16 +4654,16 @@ MG.button_layout = function (target) {
         var formatter = MG.time_format(args.utc_time, args.linked_format);
 
         // only format when x-axis is date
-        var id = typeof v === 'number' ? d.line_id - 1 : formatter(v);
-        class_string = 'roll_' + id + ' mg-line' + d.line_id;
+        var id = typeof v === 'number' ? d.__line_id__ - 1 : formatter(v);
+        class_string = 'roll_' + id + ' mg-line' + d.__line_id__;
 
         if (args.color === null) {
-          class_string += ' mg-line' + d.line_id + '-color';
+          class_string += ' mg-line' + d.__line_id__ + '-color';
         }
         return class_string;
       } else {
-        class_string = 'mg-line' + d.line_id;
-        if (args.color === null) class_string += ' mg-line' + d.line_id + '-color';
+        class_string = 'mg-line' + d.__line_id__;
+        if (args.color === null) class_string += ' mg-line' + d.__line_id__ + '-color';
         return class_string;
       }
     };
@@ -4641,10 +4731,10 @@ MG.button_layout = function (target) {
       var values = _ref18.values;
 
       var line_classes = values.map(function (_ref19) {
-        var line_id = _ref19.line_id;
+        var __line_id__ = _ref19.__line_id__;
 
-        var lc = mg_line_class(line_id);
-        if (args.colors === null) lc += ' ' + mg_line_color_class(line_id);
+        var lc = mg_line_class(__line_id__);
+        if (args.colors === null) lc += ' ' + mg_line_color_class(__line_id__);
         return lc;
       }).join(' ');
       if (args.linked && values.length > 0) {
@@ -4717,7 +4807,7 @@ MG.button_layout = function (target) {
     var xf = args.data[0].map(args.scalefns.xf);
 
     g.selectAll('.mg-rollover-rects').data(args.data[0]).enter().append('rect').attr('class', function (d, i) {
-      var cl = mg_line_color_class(line_id) + ' ' + mg_line_class(d.line_id);
+      var cl = mg_line_color_class(line_id) + ' ' + mg_line_class(d.__line_id__);
       if (args.linked) cl += cl + ' ' + mg_rollover_id_class(mg_rollover_format_id(d, args));
       return cl;
     }).attr('x', function (d, i) {
@@ -4792,7 +4882,7 @@ MG.button_layout = function (target) {
         line_id = args.custom_line_color_map[i];
       }
 
-      args.data[i].line_id = line_id;
+      args.data[i].__line_id__ = line_id;
 
       // If option activated, add active points for each lines
       if (args.active_point_on_lines) {
@@ -4803,10 +4893,11 @@ MG.button_layout = function (target) {
         });
       }
 
+      var existing_line = svg.select('path.mg-main-line.mg-line' + line_id);
       if (this_data.length === 0) {
+        existing_line.remove();
         continue;
       }
-      var existing_line = svg.select('path.mg-main-line.mg-line' + line_id);
 
       mg_add_confidence_band(args, plot, svg, line_id);
 
@@ -4909,7 +5000,7 @@ MG.button_layout = function (target) {
         y_accessor = _ref29.y_accessor,
         point_size = _ref29.point_size;
 
-    svg.select('circle.mg-line-rollover-circle.mg-line' + datum.line_id).attr('cx', scales.X(datum[x_accessor]).toFixed(2)).attr('cy', scales.Y(datum[y_accessor]).toFixed(2)).attr('r', point_size).style('opacity', 1);
+    svg.select('circle.mg-line-rollover-circle.mg-line' + datum.__line_id__).attr('cx', scales.X(datum[x_accessor]).toFixed(2)).attr('cy', scales.Y(datum[y_accessor]).toFixed(2)).attr('r', point_size).style('opacity', 1);
   };
 
   var mg_update_generic_rollover_circle = function mg_update_generic_rollover_circle(_ref30, svg, d) {
@@ -4918,7 +5009,7 @@ MG.button_layout = function (target) {
         y_accessor = _ref30.y_accessor,
         point_size = _ref30.point_size;
 
-    svg.selectAll('circle.mg-line-rollover-circle.mg-line' + d.line_id).classed('mg-line-rollover-circle', true).attr('cx', function () {
+    svg.selectAll('circle.mg-line-rollover-circle.mg-line' + d.__line_id__).classed('mg-line-rollover-circle', true).attr('cx', function () {
       return scales.X(d[x_accessor]).toFixed(2);
     }).attr('cy', function () {
       return scales.Y(d[y_accessor]).toFixed(2);
@@ -4932,7 +5023,7 @@ MG.button_layout = function (target) {
         var datum = d.values ? d.values[0] : d;
         var id = mg_rollover_format_id(datum, args);
         // trigger mouseover on matching line in .linked charts
-        d3.selectAll('.' + mg_line_class(datum.line_id) + '.' + mg_rollover_id_class(id)).each(function (d) {
+        d3.selectAll('.' + mg_line_class(datum.__line_id__) + '.' + mg_rollover_id_class(id)).each(function (d) {
           d3.select(this).on('mouseover')(d, i);
         });
       }
@@ -4969,14 +5060,12 @@ MG.button_layout = function (target) {
     }).style('opacity', 0);
   };
 
-  var mg_remove_active_data_points_for_generic_rollover = function mg_remove_active_data_points_for_generic_rollover(_ref33, svg, _ref34) {
+  var mg_remove_active_data_points_for_generic_rollover = function mg_remove_active_data_points_for_generic_rollover(_ref33, svg, line_id) {
     var custom_line_color_map = _ref33.custom_line_color_map,
         data = _ref33.data;
-    var line_id = _ref34.line_id;
 
     svg.selectAll('circle.mg-line-rollover-circle.mg-line' + line_id).style('opacity', function () {
       var id = line_id - 1;
-
       if (custom_line_color_map.length > 0 && custom_line_color_map.indexOf(line_id) !== undefined) {
         id = custom_line_color_map.indexOf(line_id);
       }
@@ -5091,10 +5180,10 @@ MG.button_layout = function (target) {
             }
 
             if (args.legend) {
-              mg_line_color_text(row.text(args.legend[di.index - 1] + '  ').bold(), di, args);
+              mg_line_color_text(row.text(args.legend[di.__index__ - 1] + '  ').bold(), di.__line_id__, args);
             }
 
-            mg_line_color_text(row.text('\u2014  ').elem, di, args);
+            mg_line_color_text(row.text('\u2014  ').elem, di.__line_id__, args);
             if (!args.aggregate_rollover) {
               row.text(mg_format_x_mouseover(args, di));
             }
@@ -5117,7 +5206,7 @@ MG.button_layout = function (target) {
         if (args.aggregate_rollover) {
           mg_remove_active_data_points_for_aggregate_rollover(args, svg);
         } else {
-          mg_remove_active_data_points_for_generic_rollover(args, svg, d);
+          mg_remove_active_data_points_for_generic_rollover(args, svg, d.__line_id__);
         }
 
         if (args.data[0].length > 1) {
@@ -5341,16 +5430,16 @@ MG.button_layout = function (target) {
     this.init(args);
   };
 
-  var _defaults = {
-    binned: false,
-    bins: null,
-    processed_x_accessor: 'x',
-    processed_y_accessor: 'y',
-    processed_dx_accessor: 'dx',
-    bar_margin: 1
+  var options = {
+    bar_margin: [1, "number"], // the margin between bars
+    binned: [false, "boolean"], // determines whether the data is already binned
+    bins: [null, ['number', 'number[]', 'function']], // the number of bins to use. type: {null, number | thresholds | threshold_function}
+    processed_x_accessor: ['x', 'string'],
+    processed_y_accessor: ['y', 'string'],
+    processed_dx_accessor: ['dx', 'string']
   };
 
-  MG.register('histogram', histogram, _defaults);
+  MG.register('histogram', histogram, options);
 }
 
 function point_mouseover(args, svg, d) {
@@ -5368,9 +5457,9 @@ function point_mouseover(args, svg, d) {
   row.text(mg_format_y_mouseover(args, d, args.time_series === false));
 }
 
-function mg_color_point_mouseover(_ref35, elem, d) {
-  var color_accessor = _ref35.color_accessor,
-      scalefns = _ref35.scalefns;
+function mg_color_point_mouseover(_ref34, elem, d) {
+  var color_accessor = _ref34.color_accessor,
+      scalefns = _ref34.scalefns;
 
   if (color_accessor !== null) {
     elem.attr('fill', scalefns.colorf(d));
@@ -5519,18 +5608,31 @@ function mg_color_point_mouseover(_ref35, elem, d) {
         return args.scalefns.youtf(d);
       });
 
-      //are we coloring our points, or just using the default color?
-      if (args.color_accessor !== null) {
-        pts.attr('fill', args.scalefns.colorf);
-        pts.attr('stroke', args.scalefns.colorf);
-      } else {
-        pts.classed('mg-points-mono', true);
+      var highlights = void 0;
+      svg.selectAll('.mg-highlight').remove();
+      if (args.highlight && mg_is_function(args.highlight)) {
+        highlights = svg.append('g').classed('mg-highlight', true).selectAll('circle').data(data.filter(args.highlight)).enter().append('circle').attr('cx', args.scalefns.xoutf).attr('cy', function (d) {
+          return args.scalefns.youtf(d);
+        });
       }
 
-      if (args.size_accessor !== null) {
-        pts.attr('r', args.scalefns.sizef);
+      var elements = [pts].concat(highlights ? [highlights] : []);
+      //are we coloring our points, or just using the default color?
+      if (args.color_accessor !== null) {
+        elements.forEach(function (e) {
+          return e.attr('fill', args.scalefns.colorf).attr('stroke', args.scalefns.colorf);
+        });
       } else {
-        pts.attr('r', args.point_size);
+        elements.forEach(function (e) {
+          return e.classed('mg-points-mono', true);
+        });
+      }
+
+      pts.attr('r', args.size_accessor !== null ? args.scalefns.sizef : args.point_size);
+      if (highlights) {
+        highlights.attr('r', args.size_accessor !== null ? function (d, i) {
+          return args.scalefns.sizef(d, i) + 2;
+        } : args.point_size + 2);
       }
 
       return this;
@@ -5555,13 +5657,21 @@ function mg_color_point_mouseover(_ref35, elem, d) {
         return d == null ? null : 'M' + d.join(',') + 'Z';
       }).attr('class', function (d, i) {
         return 'path-' + i;
-      }).style('fill-opacity', 0).on('mouseover', this.rolloverOn(args)).on('mouseout', this.rolloverOff(args)).on('mousemove', this.rolloverMove(args));
+      }).style('fill-opacity', 0).on('click', this.rolloverClick(args)).on('mouseover', this.rolloverOn(args)).on('mouseout', this.rolloverOff(args)).on('mousemove', this.rolloverMove(args));
 
       if (args.data[0].length === 1) {
         point_mouseover(args, svg, args.data[0][0]);
       }
 
       return this;
+    };
+
+    this.rolloverClick = function (args) {
+      return function (d, i) {
+        if (args.click) {
+          args.click(d, i);
+        }
+      };
     };
 
     this.rolloverOn = function (args) {
@@ -5651,45 +5761,38 @@ function mg_color_point_mouseover(_ref35, elem, d) {
     this.init(args);
   };
 
-  var _defaults2 = {
-    y_padding_percentage: 0.05, // for categorical scales
-    y_outer_padding_percentage: 0.2, // for categorical scales
-    ygroup_padding_percentage: 0, // for categorical scales
-    ygroup_outer_padding_percentage: 0, // for categorical scales
-    x_padding_percentage: 0.05, // for categorical scales
-    x_outer_padding_percentage: 0.2, // for categorical scales
-    xgroup_padding_percentage: 0, // for categorical scales
-    xgroup_outer_padding_percentage: 0, // for categorical scales
-    y_categorical_show_guides: true,
-    x_categorical_show_guides: true,
-    buffer: 16,
-    ls: false,
-    lowess: false,
-    point_size: 2.5,
-    label_accessor: null,
-    size_accessor: null,
-    color_accessor: null,
-    size_range: null, // when we set a size_accessor option, this array determines the size range, e.g. [1,5]
-    color_range: null, // e.g. ['blue', 'red'] to color different groups of points
-    size_domain: null,
-    color_domain: null,
-    active_point_size_increase: 1,
-    color_type: 'number' // can be either 'number' - the color scale is quantitative - or 'category' - the color scale is qualitative.
+  var _options = {
+    color_accessor: [null, 'string'], // the data element to use to map points to colors
+    color_range: [null, 'array'], // the range used to color different groups of points
+    color_type: ['number', ['number', 'category']], // specifies whether the color scale is quantitative or qualitative
+    point_size: [2.5, 'number'], // the radius of the dots in the scatterplot
+    size_accessor: [null, 'string'], // should point sizes be mapped to data
+    size_range: [null, 'array'], // the range of point sizes
+    lowess: [false, 'boolean'], // specifies whether to show a lowess line of best-fit
+    least_squares: [false, 'boolean'], // specifies whether to show a least-squares line of best-fit
+    y_categorical_show_guides: [true, 'boolean'],
+    x_categorical_show_guides: [true, 'boolean'],
+    buffer: [16, 'string'],
+    label_accessor: [null, 'boolean'],
+    size_domain: [null, 'array'],
+    color_domain: [null, 'array'],
+    active_point_size_increase: [1, 'number'],
+    highlight: [null, 'function'] // if this callback function returns true, the selected point will be highlighted
   };
 
-  MG.register('point', pointChart, _defaults2);
+  MG.register('point', pointChart, _options);
 }
 
 {
   // TODO add styles to stylesheet instead
-  var scaffold = function scaffold(_ref36) {
-    var target = _ref36.target,
-        width = _ref36.width,
-        height = _ref36.height,
-        top = _ref36.top,
-        left = _ref36.left,
-        right = _ref36.right,
-        buffer = _ref36.buffer;
+  var scaffold = function scaffold(_ref35) {
+    var target = _ref35.target,
+        width = _ref35.width,
+        height = _ref35.height,
+        top = _ref35.top,
+        left = _ref35.left,
+        right = _ref35.right,
+        buffer = _ref35.buffer;
 
     var svg = mg_get_svg_child_of(target);
     // main margins
@@ -5712,10 +5815,10 @@ function mg_color_point_mouseover(_ref35, elem, d) {
   // barchart re-write.
 
 
-  var mg_targeted_legend = function mg_targeted_legend(_ref37) {
-    var legend_target = _ref37.legend_target,
-        orientation = _ref37.orientation,
-        scales = _ref37.scales;
+  var mg_targeted_legend = function mg_targeted_legend(_ref36) {
+    var legend_target = _ref36.legend_target,
+        orientation = _ref36.orientation,
+        scales = _ref36.scales;
 
     var labels = void 0;
     var plot = '';
@@ -6400,40 +6503,32 @@ function mg_color_point_mouseover(_ref35, elem, d) {
     this.init(args);
   };
 
-  var _defaults3 = {
-    y_padding_percentage: 0.05, // for categorical scales
-    y_outer_padding_percentage: 0.2, // for categorical scales
-    ygroup_padding_percentage: 0, // for categorical scales
-    ygroup_outer_padding_percentage: 0, // for categorical scales
-    x_padding_percentage: 0.05, // for categorical scales
-    x_outer_padding_percentage: 0.2, // for categorical scales
-    xgroup_padding_percentage: 0, // for categorical scales
-    xgroup_outer_padding_percentage: 0, // for categorical scales
-    buffer: 16,
-    y_accessor: 'factor',
-    x_accessor: 'value',
-    reference_accessor: null,
-    comparison_accessor: null,
-    secondary_label_accessor: null,
-    color_accessor: null,
-    color_type: 'category',
-    color_domain: null,
-    reference_thickness: 1,
-    comparison_width: 3,
-    comparison_thickness: null,
-    legend: false,
-    legend_target: null,
-    mouseover_align: 'right',
-    baseline_accessor: null,
-    predictor_accessor: null,
-    predictor_proportion: 5,
-    show_bar_zero: true,
-    binned: true,
-    truncate_x_labels: true,
-    truncate_y_labels: true
+  var _options2 = {
+    buffer: [16, 'number'],
+    y_accessor: ['factor', 'string'],
+    x_accessor: ['value', 'string'],
+    reference_accessor: [null, 'string'],
+    comparison_accessor: [null, 'string'],
+    secondary_label_accessor: [null, 'string'],
+    color_accessor: [null, 'string'],
+    color_type: ['category', ['number', 'category']],
+    color_domain: [null, 'number[]'],
+    reference_thickness: [1, 'number'],
+    comparison_width: [3, 'number'],
+    comparison_thickness: [null, 'number'],
+    legend: [false, 'boolean'],
+    legend_target: [null, 'string'],
+    mouseover_align: ['right', ['right', 'left']],
+    baseline_accessor: [null, 'string'],
+    predictor_accessor: [null, 'string'],
+    predictor_proportion: [5, 'number'],
+    show_bar_zero: [true, 'boolean'],
+    binned: [true, 'boolean'],
+    truncate_x_labels: [true, 'boolean'],
+    truncate_y_labels: [true, 'boolean']
   };
 
-  MG.register('bar', barChart, _defaults3);
+  MG.register('bar', barChart, _options2);
 }
 
 /*
@@ -6503,7 +6598,7 @@ MG.data_table = function (args) {
     main value
     comparative measure
     any number of ranges
-     additional args:
+      additional args:
     no title
     xmin, xmax
     format: percentage
@@ -6638,26 +6733,26 @@ MG.data_table = function (args) {
 };
 
 {
-  var mg_missing_add_text = function mg_missing_add_text(svg, _ref38) {
-    var missing_text = _ref38.missing_text,
-        width = _ref38.width,
-        height = _ref38.height;
+  var mg_missing_add_text = function mg_missing_add_text(svg, _ref37) {
+    var missing_text = _ref37.missing_text,
+        width = _ref37.width,
+        height = _ref37.height;
 
     svg.selectAll('.mg-missing-text').data([missing_text]).enter().append('text').attr('class', 'mg-missing-text').attr('x', width / 2).attr('y', height / 2).attr('dy', '.50em').attr('text-anchor', 'middle').text(missing_text);
   };
 
   var mg_missing_x_scale = function mg_missing_x_scale(args) {
     args.scales.X = d3.scaleLinear().domain([0, args.data.length]).range([mg_get_plot_left(args), mg_get_plot_right(args)]);
-    args.scalefns.yf = function (_ref39) {
-      var y = _ref39.y;
+    args.scalefns.yf = function (_ref38) {
+      var y = _ref38.y;
       return args.scales.Y(y);
     };
   };
 
   var mg_missing_y_scale = function mg_missing_y_scale(args) {
     args.scales.Y = d3.scaleLinear().domain([-2, 2]).range([args.height - args.bottom - args.buffer * 2, args.top]);
-    args.scalefns.xf = function (_ref40) {
-      var x = _ref40.x;
+    args.scalefns.xf = function (_ref39) {
+      var x = _ref39.x;
       return args.scales.X(x);
     };
   };
@@ -6670,45 +6765,45 @@ MG.data_table = function (args) {
     args.data = data;
   };
 
-  var mg_add_missing_background_rect = function mg_add_missing_background_rect(g, _ref41) {
-    var title = _ref41.title,
-        buffer = _ref41.buffer,
-        title_y_position = _ref41.title_y_position,
-        width = _ref41.width,
-        height = _ref41.height;
+  var mg_add_missing_background_rect = function mg_add_missing_background_rect(g, _ref40) {
+    var title = _ref40.title,
+        buffer = _ref40.buffer,
+        title_y_position = _ref40.title_y_position,
+        width = _ref40.width,
+        height = _ref40.height;
 
     g.append('svg:rect').classed('mg-missing-background', true).attr('x', buffer).attr('y', buffer + (title ? title_y_position : 0) * 2).attr('width', width - buffer * 2).attr('height', height - buffer * 2 - (title ? title_y_position : 0) * 2).attr('rx', 15).attr('ry', 15);
   };
 
-  var mg_missing_add_line = function mg_missing_add_line(g, _ref42) {
-    var scalefns = _ref42.scalefns,
-        interpolate = _ref42.interpolate,
-        data = _ref42.data;
+  var mg_missing_add_line = function mg_missing_add_line(g, _ref41) {
+    var scalefns = _ref41.scalefns,
+        interpolate = _ref41.interpolate,
+        data = _ref41.data;
 
     var line = d3.line().x(scalefns.xf).y(scalefns.yf).curve(interpolate);
 
     g.append('path').attr('class', 'mg-main-line mg-line1-color').attr('d', line(data));
   };
 
-  var mg_missing_add_area = function mg_missing_add_area(g, _ref43) {
-    var scalefns = _ref43.scalefns,
-        scales = _ref43.scales,
-        interpolate = _ref43.interpolate,
-        data = _ref43.data;
+  var mg_missing_add_area = function mg_missing_add_area(g, _ref42) {
+    var scalefns = _ref42.scalefns,
+        scales = _ref42.scales,
+        interpolate = _ref42.interpolate,
+        data = _ref42.data;
 
     var area = d3.area().x(scalefns.xf).y0(scales.Y.range()[0]).y1(scalefns.yf).curve(interpolate);
 
     g.append('path').attr('class', 'mg-main-area mg-area1-color').attr('d', area(data));
   };
 
-  var mg_remove_all_children = function mg_remove_all_children(_ref44) {
-    var target = _ref44.target;
+  var mg_remove_all_children = function mg_remove_all_children(_ref43) {
+    var target = _ref43.target;
 
     d3.select(target).selectAll('svg *').remove();
   };
 
-  var mg_missing_remove_legend = function mg_missing_remove_legend(_ref45) {
-    var legend_target = _ref45.legend_target;
+  var mg_missing_remove_legend = function mg_missing_remove_legend(_ref44) {
+    var legend_target = _ref44.legend_target;
 
     if (legend_target) {
       d3.select(legend_target).html('');
@@ -6767,24 +6862,23 @@ MG.data_table = function (args) {
     this.init(args);
   };
 
-  var _defaults4 = {
-    top: 40, // the size of the top margin
-    bottom: 30, // the size of the bottom margin
-    right: 10, // size of the right margin
-    left: 0, // size of the left margin
-    buffer: 8, // the buffer between the actual chart area and the margins
-    legend_target: '',
-    width: 350,
-    height: 220,
-    missing_text: 'Data currently missing or unavailable',
-    scalefns: {},
-    scales: {},
-    show_tooltips: true,
-    show_missing_background: true
+  var _defaults = {
+    top: [40, 'number'], // the size of the top margin
+    bottom: [30, 'number'], // the size of the bottom margin
+    right: [10, 'number'], // size of the right margin
+    left: [0, 'number'], // size of the left margin
+    buffer: [8, 'number'], // the buffer between the actual chart area and the margins
+    legend_target: ['', 'string'],
+    width: [350, 'number'],
+    height: [220, 'number'],
+    missing_text: ['Data currently missing or unavailable', 'string'],
+    show_tooltips: [true, 'boolean'],
+    show_missing_background: [true, 'boolean']
   };
 
-  MG.register('missing-data', missingData, _defaults4);
+  MG.register('missing-data', missingData, _defaults);
 }
+
 function mg_process_scale_ticks(args, axis) {
   var accessor;
   var scale_ticks;
@@ -7458,7 +7552,7 @@ function format_rollover_number(args) {
     };
   } else {
     num = function num(d_) {
-      var fmt_string = (args.decimals ? '.' + args.decimals : '') + '%';
+      var fmt_string = (isNumeric(args.decimals) ? '.' + args.decimals : '') + '%';
       var pf = d3.format(fmt_string);
       return pf(d_);
     };
